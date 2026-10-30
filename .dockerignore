@@ -1,0 +1,12 @@
+# Runtime image consumes only packaged artifacts and its startup script.
+**
+!LICENSE
+!NOTICE
+!console-server/
+!console-server/target/
+!console-server/target/xipki-console-server-1.0.0-SNAPSHOT.jar
+!console-server/target/lib/
+!console-server/target/lib/*.jar
+!deploy/
+!deploy/Dockerfile
+!deploy/docker-entrypoint.sh
