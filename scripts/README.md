@@ -30,14 +30,22 @@ never inferred from a backup/worktree location. For example:
 export JAVA_HOME=/absolute/path/to/jdk-17
 export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
 sh scripts/build.sh --docker
+docker build -f "$XIPKI_SOURCE_DIR/docker/ca/Dockerfile" \
+  -t xipki-ca:security-update "$XIPKI_SOURCE_DIR"
 export CA_IMAGE=xipki-ca:security-update
+export WEB_IMAGE=xipki-console:local
+export DB_IMAGE=xipki-console-db:local
+sh scripts/check-security.sh
 export WEB_PORT=28127
 sh scripts/local.sh up
 ```
 
-`CA_IMAGE` must be the matching XiPKI Docker distribution, already downloaded
-or built. It must export its management client and expose a healthy management
-endpoint as described in the root README. Building Console does not build CA.
+`CA_IMAGE` must be the matching XiPKI Docker distribution. Pin that source
+checkout to a tested commit; it must include `docker/ca/Dockerfile`, export its
+management client and expose a healthy management endpoint as described in the
+root README. Building Console does not build CA. `security-update` is only a
+local development tag; the security scan requires Trivy and release images
+should use reviewed, immutable digests.
 The example uses an unused local port; default `WEB_PORT` is 8080. Existing
 services using the chosen port are not stopped or replaced automatically.
 

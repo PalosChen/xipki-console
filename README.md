@@ -7,7 +7,8 @@ role-based access control, audit logging, and Docker deployment.
 
 This is an independently developed companion to [XiPKI](https://github.com/xipki/xipki).
 It includes an English/Simplified Chinese React frontend and a Java 17 backend
-using embedded Tomcat, direct JDBC, and XiPKI's management client and JSON codec.
+using embedded Tomcat, direct JDBC, a Console implementation of the XiPKI CA
+management protocol, and XiPKI's JSON and configuration utilities.
 The backend does not require Spring Boot, Jackson, an ORM, or a connection pool.
 
 ## Features
@@ -49,7 +50,7 @@ tests and packages the lightweight backend. To also create a host distribution
 archive, use `sh scripts/package.sh`; output is under the ignored `dist/` directory.
 
 Console retains **XiPKI `6.6.0-SNAPSHOT` utility** artifacts for JSON and configuration
-encoding. The CA management client and cryptography use Console adapters and JDK
+encoding. The CA management protocol adapter and cryptography use Console code and JDK
 providers; the Console runtime contains no Bouncy Castle or XiPKI security module.
 Install the matching utility artifacts first. To include that step in the
 build, explicitly provide the source checkout:
@@ -78,14 +79,8 @@ when the backend uses a different address.
 
 ## Docker deployment
 
-On the development host with Docker running, build the application and both Console/database images:
-
-```sh
-sh scripts/build.sh --docker
-```
-
-The Dockerfile packages prebuilt artifacts; it does not compile or run tests.
-Its build context excludes source files, credentials and local runtime data.
+The Console `deploy/Dockerfile` packages prebuilt artifacts; it does not compile
+or run tests. Its build context excludes source files, credentials and local runtime data.
 The runtime uses Java 17 headless packages on official Alpine. The database
 image retains MariaDB 11.4.13 on Alpine and replaces the upstream Go-based
 privilege helper with `su-exec`. Both images must pass [security checks](guides/security.md)
@@ -97,15 +92,29 @@ distribution image** that exports a management client to `/export/web` and runs
 the management endpoint at `https://ca:8443/ca/mgmt`. An arbitrary upstream CA
 image may not implement this provisioning contract.
 
-On the Docker host, set the image references (public release images are not yet
-specified), choose a free port, then start:
+The CA image is built separately from a matching XiPKI `6.6.0-SNAPSHOT`
+distribution source checkout containing `docker/ca/Dockerfile`. This repository
+does not publish that image. Pin the XiPKI checkout to a tested commit and use
+the same checkout for the Console utility dependency. On a development host
+with Docker running, build and scan the local images before starting them:
 
 ```sh
+export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
+sh scripts/build.sh --docker
+docker build -f "$XIPKI_SOURCE_DIR/docker/ca/Dockerfile" \
+  -t xipki-ca:security-update "$XIPKI_SOURCE_DIR"
 export CA_IMAGE=xipki-ca:security-update
 export WEB_IMAGE=xipki-console:local
+export DB_IMAGE=xipki-console-db:local
+sh scripts/check-security.sh
 export WEB_PORT=28127
 sh scripts/local.sh up
 ```
+
+`security-update` is a local development tag, not a published image or proof of
+security. The scan requires Trivy; release deployments should use reviewed,
+immutable image digests. Transfer or publish the images first if the Docker host
+is separate from the build host. Choose an unused port before starting.
 
 The script initializes missing secrets, starts a separate `xipki-console-local`
 Compose project, waits for all three services to be healthy and checks for

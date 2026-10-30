@@ -6,7 +6,8 @@
 
 本项目是独立开发的 [XiPKI](https://github.com/xipki/xipki) 配套管理平台。
 前端采用 React，支持英文和简体中文；后端基于 Java 17，使用嵌入式 Tomcat、直接 JDBC、
-XiPKI 管理客户端及 JSON 编解码工具，无需 Spring Boot、Jackson、ORM 或连接池。
+Console 实现的 XiPKI CA 管理协议适配层，以及 XiPKI 的 JSON 和配置工具，
+无需 Spring Boot、Jackson、ORM 或连接池。
 
 ## 功能
 
@@ -68,13 +69,8 @@ java -Dsun.net.client.defaultConnectTimeout=3000 -Dsun.net.client.defaultReadTim
 
 ## Docker 部署
 
-在已启动 Docker 的开发主机上编译应用并生成镜像：
-
-```sh
-sh scripts/build.sh --docker
-```
-
-Dockerfile 只打包编译产物，不执行编译和测试。构建上下文排除了源码、凭据和本地运行数据。
+Console 的 `deploy/Dockerfile` 只打包编译产物，不执行编译和测试。
+其构建上下文排除了源码、凭据和本地运行数据。
 `--docker` 同时构建 Console 和数据库镜像。Console 使用官方 Alpine 的 Java 17 headless；
 数据库使用 Alpine 中的 MariaDB 11.4.13，并用 `su-exec` 替换上游基于旧 Go 的降权辅助程序。
 发布前必须执行[安全检查](guides/security.md)，不能仅凭升级镜像标签判断安全。
@@ -83,14 +79,27 @@ Dockerfile 只打包编译产物，不执行编译和测试。构建上下文排
 需要**匹配的 XiPKI Docker 发行镜像**，该镜像必须将管理客户端导出到 `/export/web`，
 并在 `https://ca:8443/ca/mgmt` 提供管理接口。任意上游 CA 镜像不一定满足此初始化约定。
 
-在 Docker 宿主机设置镜像名称并选择空闲端口后启动；公开发行镜像地址尚未确定：
+CA 镜像需要从匹配的 XiPKI `6.6.0-SNAPSHOT` 发行源码单独构建，该源码须包含
+`docker/ca/Dockerfile`。本仓库不发布 CA 镜像。将 XiPKI 源码固定到经过测试的提交，
+并使用同一份源码构建 Console 所需的工具模块。在已启动 Docker 的开发主机上
+构建本地镜像，完成扫描后启动：
 
 ```sh
+export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
+sh scripts/build.sh --docker
+docker build -f "$XIPKI_SOURCE_DIR/docker/ca/Dockerfile" \
+  -t xipki-ca:security-update "$XIPKI_SOURCE_DIR"
 export CA_IMAGE=xipki-ca:security-update
 export WEB_IMAGE=xipki-console:local
+export DB_IMAGE=xipki-console-db:local
+sh scripts/check-security.sh
 export WEB_PORT=28127
 sh scripts/local.sh up
 ```
+
+`security-update` 只是本地开发标签，并非已发布镜像，也不能证明镜像安全。
+扫描需要 Trivy；正式部署应使用经过审查的不可变镜像 digest。如果构建主机
+与 Docker 宿主机不同，先传输或发布镜像，并选择空闲端口。
 
 脚本初始化缺失的凭据，启动独立的 `xipki-console-local` Compose 项目，等待三个服务健康，
 并检查是否出现反复重启。提示就绪后，其他设备可访问 `http://<宿主机内网 IP>:28127`。
