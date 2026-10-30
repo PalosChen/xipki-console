@@ -1,0 +1,75 @@
+name: xipki-console
+services:
+  web-db:
+    image: ${DB_IMAGE:-xipki-console-db:local}
+    build:
+      context: ..
+      dockerfile: deploy/mariadb.Dockerfile
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/web-db-root-password
+      MARIADB_DATABASE: xipki_web
+      MARIADB_USER: xipki_web
+      MARIADB_PASSWORD_FILE: /run/secrets/web-db-password
+    secrets:
+      - web-db-root-password
+      - web-db-password
+    volumes:
+      - web-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+  ca:
+    image: ${CA_IMAGE:?Set CA_IMAGE to the release tag and digest}
+    restart: unless-stopped
+    environment:
+      XIPKI_EXPORT_WEB_CLIENT: "true"
+      XIPKI_CA_NAME: ${XIPKI_CA_NAME:-demo-ca}
+      XIPKI_CA_SUBJECT: ${XIPKI_CA_SUBJECT:-CN=Demo CA,O=XiPKI}
+    volumes:
+      - ca-data:/data
+      - management-client:/export/web
+    stop_grace_period: 40s
+  web:
+    image: ${WEB_IMAGE:?Set WEB_IMAGE to the release tag and digest}
+    restart: unless-stopped
+    depends_on:
+      web-db:
+        condition: service_healthy
+      ca:
+        condition: service_healthy
+    environment:
+      WEB_ADMIN_USERNAME: ${WEB_ADMIN_USERNAME:-admin}
+      WEB_ADMIN_PASSWORD_FILE: /run/web-secrets/admin-password
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+      XIPKI_CA_URL: https://ca:8443/ca/mgmt
+      XIPKI_CA_NAME: ${XIPKI_CA_NAME:-demo-ca}
+      XIPKI_CA_RDN_ORDER: ${XIPKI_CA_RDN_ORDER:-}
+      WEB_DB_URL: jdbc:mariadb://web-db:3306/xipki_web
+      WEB_DB_USER: xipki_web
+      WEB_DB_PASSWORD_FILE: /run/secrets/web-db-password
+      WEB_ENROLLMENT_KEY_FILE: /run/web-secrets/enrollment-key
+      WEB_ENROLLMENT_KEY_DIR: /var/lib/xipki-web/enrollment-keys
+    ports:
+      - "${WEB_BIND_ADDRESS:-0.0.0.0}:${WEB_PORT:-8080}:8080"
+    volumes:
+      - management-client:/run/xipki-client:ro
+      - ./secrets/admin-password:/run/web-secrets/admin-password:ro
+      - ./secrets/enrollment-key:/run/web-secrets/enrollment-key:ro
+      - web-enrollment-keys:/var/lib/xipki-web/enrollment-keys
+    secrets:
+      - web-db-password
+    stop_grace_period: 30s
+volumes:
+  ca-data:
+  management-client:
+  web-db-data:
+  web-enrollment-keys:
+secrets:
+  web-db-root-password:
+    file: ./secrets/web-db-root-password
+  web-db-password:
+    file: ./secrets/web-db-password

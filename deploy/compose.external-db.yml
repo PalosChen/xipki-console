@@ -1,0 +1,15 @@
+# Docker host: docker compose -f compose.yml -f compose.external-db.yml up -d
+# Provision both databases and a dedicated DB user before starting.
+services:
+  ca:
+    environment:
+      XIPKI_DB_TYPE: ${XIPKI_DB_TYPE:?Set postgresql or mariadb}
+      XIPKI_DB_HOST: ${XIPKI_DB_HOST:?Set database hostname}
+      XIPKI_DB_PORT: ${XIPKI_DB_PORT:?Set database port}
+      XIPKI_DB_USER: ${XIPKI_DB_USER:?Set database user}
+      XIPKI_DB_CA_NAME: ${XIPKI_DB_CA_NAME:?Set CA database name}
+      XIPKI_DB_CACONF_NAME: ${XIPKI_DB_CACONF_NAME:?Set caconf database name}
+      XIPKI_DB_INIT: ${XIPKI_DB_INIT:-false}
+      XIPKI_DB_PASSWORD_FILE: /run/db-secret/password
+    volumes:
+      - ${DB_SECRET_DIR:?Set absolute private directory readable by UID 10001}:/run/db-secret:ro
