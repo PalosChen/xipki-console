@@ -2,14 +2,10 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-A lightweight web console for XiPKI, featuring CA and certificate management,
-role-based access control, audit logging, and Docker deployment.
-
-This is an independently developed companion to [XiPKI](https://github.com/xipki/xipki).
-It includes an English/Simplified Chinese React frontend and a Java 17 backend
-using embedded Tomcat, direct JDBC, a Console implementation of the XiPKI CA
-management protocol, and XiPKI's JSON and configuration utilities.
-The backend does not require Spring Boot, Jackson, an ORM, or a connection pool.
+XiPKI Console is a web management interface for [XiPKI](https://github.com/xipki/xipki).
+The React frontend supports English and Simplified Chinese. The Java 17 backend
+uses embedded Tomcat and JDBC, communicates with the CA management endpoint over
+mutual TLS, and uses XiPKI utilities for configuration and JSON encoding.
 
 ## Features
 
@@ -19,50 +15,39 @@ The backend does not require Spring Boot, Jackson, an ORM, or a connection pool.
 - Editable users and roles, operation permissions, CA/template scopes and audit records.
 - Self-service account settings, password changes and English/Chinese localization.
 
-Web accounts, permissions, sessions and audit data use MariaDB. The CA retains
-its own database configuration, including H2 or an external database.
+Web accounts, permissions, sessions and audit data are stored in MariaDB.
+The CA database is configured separately and can use H2 or an external database.
 
 ## Repository layout
 
 | Directory | Contents |
 | --- | --- |
-| `console-server/` | Lightweight backend, schema migrations and regression tests |
+| `console-server/` | Java backend, schema migrations and regression tests |
 | `console-ui/` | React application, translations and frontend tests |
 | `tests/api/` | Manually invoked API acceptance checks against a running system |
 | `scripts/` | Build, archive packaging and local startup commands |
 | `deploy/` | Runtime image, Compose deployment and startup scripts |
 | `guides/` | Maintained configuration, authorization, testing and translation guides |
 
-`docs/` is reserved for local AI notes, drafts and process reports. It is ignored
-by Git and excluded from release archives; publish maintained instructions in `guides/`.
-
-## Build on the development host
+## Build
 
 Requirements: JDK 17+, Maven, Node.js 22.16+ and npm. Build and test from the
 repository root:
 
 ```sh
+export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
 sh scripts/build.sh
 ```
 
-This installs locked frontend dependencies, tests and builds the frontend, then
-tests and packages the lightweight backend. To also create a host distribution
-archive, use `sh scripts/package.sh`; output is under the ignored `dist/` directory.
+The backend depends on XiPKI `util-extra:6.6.0-SNAPSHOT`. When
+`XIPKI_SOURCE_DIR` is set, the build installs the matching utility artifacts
+from that checkout. Omit it when the artifacts are already available in the
+local Maven repository. The script installs locked frontend dependencies,
+runs frontend and backend tests, and builds both components. To create a host
+distribution archive, run `sh scripts/package.sh`; output is in `dist/`.
 
-Console retains **XiPKI `6.6.0-SNAPSHOT` utility** artifacts for JSON and configuration
-encoding. The CA management protocol adapter and cryptography use Console code and JDK
-providers; the Console runtime contains no Bouncy Castle or XiPKI security module.
-Install the matching utility artifacts first. To include that step in the
-build, explicitly provide the source checkout:
-
-```sh
-XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki sh scripts/build.sh
-```
-
-Use the matching existing 6.x checkout. The latest upstream `master` is a 7.x
-development line with different Java packages and Maven coordinates; changing
-`xipki.version` alone does not upgrade this console. Compatibility with other
-XiPKI releases must be verified before use.
+Use a compatible XiPKI source revision for the version in
+`console-server/pom.xml`. Other versions require compatibility testing.
 
 The distribution consists of `console-server/target/xipki-console-server-1.0.0-SNAPSHOT.jar`
 **and all of `console-server/target/lib/`**. After configuring the environment described
@@ -79,24 +64,22 @@ when the backend uses a different address.
 
 ## Docker deployment
 
-The Console `deploy/Dockerfile` packages prebuilt artifacts; it does not compile
-or run tests. Its build context excludes source files, credentials and local runtime data.
-The runtime uses Java 17 headless packages on official Alpine. The database
-image retains MariaDB 11.4.13 on Alpine and replaces the upstream Go-based
-privilege helper with `su-exec`. Both images must pass [security checks](guides/security.md)
-before publication; an updated upstream tag alone does not establish safety.
+`sh scripts/build.sh --docker` builds the Console and database images. The
+Console image packages the prebuilt application on Alpine with Java 17. The
+database image uses MariaDB 11.4.13 on Alpine. See the
+[security guide](guides/security.md) for image verification requirements.
 
 `deploy/compose.yml` starts the console, MariaDB and a separate CA image, with
 named volumes for their persistent data. It requires the **matching XiPKI Docker
 distribution image** that exports a management client to `/export/web` and runs
-the management endpoint at `https://ca:8443/ca/mgmt`. An arbitrary upstream CA
-image may not implement this provisioning contract.
+the management endpoint at `https://ca:8443/ca/mgmt`. The CA image must support
+this provisioning contract.
 
 The CA image is built separately from a matching XiPKI `6.6.0-SNAPSHOT`
-distribution source checkout containing `docker/ca/Dockerfile`. This repository
-does not publish that image. Pin the XiPKI checkout to a tested commit and use
-the same checkout for the Console utility dependency. On a development host
-with Docker running, build and scan the local images before starting them:
+distribution checkout containing `docker/ca/Dockerfile`. This repository does
+not publish a CA image. Use the same XiPKI checkout for the Console build and
+pin its revision for reproducible deployments. On a development host with
+Docker running, build and scan the images before starting them:
 
 ```sh
 export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
@@ -111,10 +94,9 @@ export WEB_PORT=28127
 sh scripts/local.sh up
 ```
 
-`security-update` is a local development tag, not a published image or proof of
-security. The scan requires Trivy; release deployments should use reviewed,
-immutable image digests. Transfer or publish the images first if the Docker host
-is separate from the build host. Choose an unused port before starting.
+The example uses local image tags. The security check requires Trivy; release
+deployments should use reviewed image digests. Transfer the images to the Docker
+host when it differs from the build host.
 
 The script initializes missing secrets, starts a separate `xipki-console-local`
 Compose project, waits for all three services to be healthy and checks for
@@ -145,16 +127,12 @@ database volumes, enrollment keys and their encryption secret together. See
 
 ## Contributing
 
-Use English for source code, identifiers, comments, logs, API messages and
-maintained guides. Keep `README.md` as the primary English entry point and
-update `README.zh-CN.md` when its content changes. Both versions link to each
-other at the top.
-
-Localized UI text belongs in the language resources. Native language names and
-Unicode or translation test fixtures may contain their original characters.
-See [testing](guides/testing.md) before submitting changes.
+Source code, API messages and maintained guides are written in English.
+Localized UI text belongs in the language resources. Keep both README versions
+in sync and run the checks in [testing](guides/testing.md) before submitting changes.
 
 ## License
 
-The console uses the [MIT license](LICENSE). Third-party dependencies retain
-their respective licenses.
+XiPKI Console is licensed under the [Apache License, Version 2.0](LICENSE).
+See [NOTICE](NOTICE) for the copyright statement. Third-party dependencies
+retain their respective licenses.

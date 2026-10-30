@@ -14,6 +14,7 @@ RUN mkdir -p /var/lib/xipki-web/enrollment-keys \
     && chown -R web:web /var/lib/xipki-web && chmod 0700 /var/lib/xipki-web/enrollment-keys
 COPY console-server/target/xipki-console-server-1.0.0-SNAPSHOT.jar app.jar
 COPY console-server/target/lib/ lib/
+COPY LICENSE NOTICE ./
 COPY --chmod=0755 deploy/docker-entrypoint.sh docker-entrypoint.sh
 USER web
 EXPOSE 8080

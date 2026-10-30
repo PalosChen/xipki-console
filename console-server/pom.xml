@@ -3,6 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.xipki</groupId><artifactId>xipki-console-server</artifactId><version>1.0.0-SNAPSHOT</version>
   <name>XiPKI Console Server</name>
+  <licenses><license><name>Apache License, Version 2.0</name><url>https://www.apache.org/licenses/LICENSE-2.0</url><distribution>repo</distribution></license></licenses>
   <properties>
     <maven.compiler.release>17</maven.compiler.release><project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <xipki.version>6.6.0-SNAPSHOT</xipki.version><console.ui.dist>${project.basedir}/../console-ui/dist</console.ui.dist>

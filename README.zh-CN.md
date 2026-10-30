@@ -2,12 +2,9 @@
 
 [English](README.md) | **简体中文**
 
-轻量级 XiPKI Web 管理平台，提供 CA 与证书管理、基于角色的访问控制、审计日志及 Docker 部署能力。
-
-本项目是独立开发的 [XiPKI](https://github.com/xipki/xipki) 配套管理平台。
-前端采用 React，支持英文和简体中文；后端基于 Java 17，使用嵌入式 Tomcat、直接 JDBC、
-Console 实现的 XiPKI CA 管理协议适配层，以及 XiPKI 的 JSON 和配置工具，
-无需 Spring Boot、Jackson、ORM 或连接池。
+XiPKI Console 是 [XiPKI](https://github.com/xipki/xipki) 的 Web 管理界面。
+React 前端支持英文和简体中文；Java 17 后端使用嵌入式 Tomcat 和 JDBC，
+通过双向 TLS 调用 CA 管理接口，并使用 XiPKI 工具模块处理配置和 JSON 编码。
 
 ## 功能
 
@@ -17,44 +14,36 @@ Console 实现的 XiPKI CA 管理协议适配层，以及 XiPKI 的 JSON 和配�
 - 用户和角色编辑、操作权限、CA/模板授权范围与审计记录。
 - 个人账户设置、密码修改及中英文界面切换。
 
-Web 账户、权限、会话和审计数据使用 MariaDB。CA 使用独立的数据库配置，可采用 H2 或外部数据库。
+Web 账户、权限、会话和审计数据存储在 MariaDB 中。CA 数据库独立配置，
+可使用 H2 或外部数据库。
 
 ## 目录结构
 
 | 目录 | 内容 |
 | --- | --- |
-| `console-server/` | 轻量后端、数据库迁移与回归测试 |
+| `console-server/` | Java 后端、数据库迁移与回归测试 |
 | `console-ui/` | React 应用、翻译资源与前端测试 |
 | `tests/api/` | 针对运行中系统手动执行的 API 验收脚本 |
 | `scripts/` | 编译、压缩包打包与本地启动脚本 |
 | `deploy/` | 运行镜像、Compose 部署与启动脚本 |
 | `guides/` | 正式维护的英文配置、权限、测试及国际化指南 |
 
-`docs/` 用于本地 AI 分析、草稿和过程记录，整体忽略提交，也不包含在发布包中。
-需要长期维护的正式说明放在 `guides/`。
-
-## 在开发主机编译
+## 构建
 
 需要 JDK 17+、Maven、Node.js 22.16+ 和 npm。在仓库根目录执行：
 
 ```sh
+export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
 sh scripts/build.sh
 ```
 
-脚本按锁文件安装前端依赖，执行前端测试和构建，然后测试并打包轻量后端。
-如需同时生成主机运行压缩包，使用 `sh scripts/package.sh`，产物保存在已忽略的 `dist/` 目录。
+后端依赖 XiPKI `util-extra:6.6.0-SNAPSHOT`。设置 `XIPKI_SOURCE_DIR` 后，
+构建脚本会从该源码安装匹配的工具模块；如果本地 Maven 仓库已有构建产物，
+可不设置该变量。脚本按锁文件安装前端依赖，运行前后端测试并完成构建。
+执行 `sh scripts/package.sh` 可生成主机运行压缩包，产物位于 `dist/`。
 
-当前只复用 **XiPKI `6.6.0-SNAPSHOT` 工具模块**中的 JSON 和配置编码能力。
-CA 管理协议与密码学处理使用 Console 适配层和 JDK 提供者，Console 运行时不包含
-Bouncy Castle 或 XiPKI security 模块。需要先安装匹配的工具模块构建产物。
-也可以显式指定源码目录，将此步骤纳入构建：
-
-```sh
-XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki sh scripts/build.sh
-```
-
-请使用匹配的现有 6.x 源码。上游 `master` 的 7.x 开发线使用不同的 Java 包及 Maven 坐标，
-仅修改 `xipki.version` 不能完成升级。其他 XiPKI 版本的兼容性需要单独验证。
+XiPKI 源码版本须与 `console-server/pom.xml` 中的版本兼容。使用其他版本前
+需要验证兼容性。
 
 运行文件包括 `console-server/target/xipki-console-server-1.0.0-SNAPSHOT.jar`
 和完整的 `console-server/target/lib/`。按照[运行配置](guides/configuration.md)设置环境后，在主机执行：
@@ -69,20 +58,18 @@ java -Dsun.net.client.defaultConnectTimeout=3000 -Dsun.net.client.defaultReadTim
 
 ## Docker 部署
 
-Console 的 `deploy/Dockerfile` 只打包编译产物，不执行编译和测试。
-其构建上下文排除了源码、凭据和本地运行数据。
-`--docker` 同时构建 Console 和数据库镜像。Console 使用官方 Alpine 的 Java 17 headless；
-数据库使用 Alpine 中的 MariaDB 11.4.13，并用 `su-exec` 替换上游基于旧 Go 的降权辅助程序。
-发布前必须执行[安全检查](guides/security.md)，不能仅凭升级镜像标签判断安全。
+`sh scripts/build.sh --docker` 构建 Console 和数据库镜像。Console 镜像
+在 Alpine 上打包已构建的应用和 Java 17；数据库镜像使用 Alpine 上的
+MariaDB 11.4.13。镜像验证要求见[安全指南](guides/security.md)。
 
 `deploy/compose.yml` 启动 Console、MariaDB 和独立 CA 镜像，并使用命名卷持久化数据。
 需要**匹配的 XiPKI Docker 发行镜像**，该镜像必须将管理客户端导出到 `/export/web`，
-并在 `https://ca:8443/ca/mgmt` 提供管理接口。任意上游 CA 镜像不一定满足此初始化约定。
+并在 `https://ca:8443/ca/mgmt` 提供管理接口。CA 镜像必须满足这一初始化约定。
 
 CA 镜像需要从匹配的 XiPKI `6.6.0-SNAPSHOT` 发行源码单独构建，该源码须包含
-`docker/ca/Dockerfile`。本仓库不发布 CA 镜像。将 XiPKI 源码固定到经过测试的提交，
-并使用同一份源码构建 Console 所需的工具模块。在已启动 Docker 的开发主机上
-构建本地镜像，完成扫描后启动：
+`docker/ca/Dockerfile`。本仓库不发布 CA 镜像。Console 构建和 CA 镜像构建
+应使用同一份 XiPKI 源码，并固定其版本以便复现。在已启动 Docker 的
+开发主机上构建并扫描镜像，然后启动：
 
 ```sh
 export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
@@ -97,9 +84,8 @@ export WEB_PORT=28127
 sh scripts/local.sh up
 ```
 
-`security-update` 只是本地开发标签，并非已发布镜像，也不能证明镜像安全。
-扫描需要 Trivy；正式部署应使用经过审查的不可变镜像 digest。如果构建主机
-与 Docker 宿主机不同，先传输或发布镜像，并选择空闲端口。
+示例使用本地镜像标签。安全检查需要 Trivy；正式部署应使用经过审查的
+镜像 digest。如果构建主机与 Docker 宿主机不同，需先传输镜像。
 
 脚本初始化缺失的凭据，启动独立的 `xipki-console-local` Compose 项目，等待三个服务健康，
 并检查是否出现反复重启。提示就绪后，其他设备可访问 `http://<宿主机内网 IP>:28127`。
@@ -127,12 +113,10 @@ sh scripts/local.sh up
 
 ## 参与开发
 
-源码、标识符、注释、日志、API 消息及正式指南统一使用英文。
-`README.md` 为主要英文入口；内容变化时同步更新 `README.zh-CN.md`，两者顶部提供互相跳转的链接。
-
-界面翻译放在语言资源中。语言名称、Unicode 及翻译测试数据可以保留对应语言的原始字符。
-提交修改前请参考[测试说明](guides/testing.md)。
+源码、API 消息及正式指南以英文编写；界面翻译放在语言资源中。
+两份 README 应保持内容一致。提交修改前运行[测试说明](guides/testing.md)中的检查。
 
 ## 许可证
 
-本项目采用 [MIT 许可证](LICENSE)。第三方依赖遵循其各自的许可证。
+XiPKI Console 采用 [Apache License 2.0](LICENSE)。版权声明见 [NOTICE](NOTICE)。
+第三方依赖遵循其各自的许可证。

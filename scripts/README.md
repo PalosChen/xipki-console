@@ -73,7 +73,7 @@ sh scripts/package.sh
 ```
 
 The archive includes the application JAR, `lib/`, both README languages, `guides/`,
-this script usage guide and the license. It contains no secrets or database contents.
+this script usage guide, `LICENSE` and `NOTICE`. It contains no secrets or database contents.
 Extract into a new directory, set
 the database and CA mTLS settings from `guides/configuration.md`, then run:
 
