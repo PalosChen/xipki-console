@@ -109,10 +109,17 @@ database writes do not form a distributed transaction. After a timeout or an
 uncertain result, reconcile by request ID and certificate serial number before
 retrying; do not automatically retry issuance.
 
-The requester certificate list checks at most the latest 1,000 Web ownership
-records before applying filters. Certificates issued directly through CA/Shell,
-or without Web ownership records, are not assigned to a requester automatically.
-Use a certificate operator account for broader queries.
+The requester certificate list scans Web ownership records in bounded cursor
+pages and applies the filters and result limit after the scan. Large histories
+may take longer to search; the page allows cancelling the scan. Certificates
+issued directly through CA/Shell, or without Web ownership records, are not
+assigned to a requester automatically. Use a certificate operator account for
+broader queries.
+For API clients, set `paged=true` and repeat `GET /api/cert` with the same filters and the opaque
+`cursor` query value from the preceding `X-Next-Cursor` response header until
+that header is absent. Each response scans at most five ownership records.
+Without `paged=true`, the existing single-response behavior is retained for up
+to 1,000 ownership records; larger histories return an explicit error.
 
 See [runtime configuration](configuration.md) for database upgrades and persistence,
 and [testing](testing.md) for isolated test requirements.

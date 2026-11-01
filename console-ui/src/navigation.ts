@@ -3,9 +3,9 @@ import type {AccessUser} from './access-policy'
 export const navigationItems = {
   '/dashboard': {label:'Dashboard', permission:'CA_READ'},
   '/ca': {label:'CA Management', permission:'CA_READ|CA_CREATE_ROOT|CA_IMPORT|CA_ISSUE_SUBCA'},
-  '/cert': {label:'Certificates', permission:'CERT_READ'},
+  '/cert': {label:'Certificate list', permission:'CERT_READ'},
   '/cert/enroll': {label:'Issue certificate', permission:'CERT_ISSUE|CERT_KEYGEN|CERT_CROSS'},
-  '/crl': {label:'CRL', permission:'CRL_READ'},
+  '/crl': {label:'CRL Management', permission:'CRL_READ'},
   '/profile': {label:'Cert Profiles', permission:'PROFILE_READ'},
   '/signer': {label:'Signers', permission:'SIGNER_READ'},
   '/requestor': {label:'Requestors', permission:'REQUESTOR_READ'},
@@ -21,7 +21,8 @@ export const navigationItems = {
 export type NavigationKey = keyof typeof navigationItems
 
 const groups: {label:string;keys:NavigationKey[]}[] = [
-  {label:'Operations',keys:['/dashboard','/ca','/cert','/cert/enroll','/crl']},
+  {label:'Operations',keys:['/dashboard','/ca']},
+  {label:'Certificate Management',keys:['/cert','/cert/enroll','/crl']},
   {label:'CA configuration',keys:['/profile','/signer','/requestor','/publisher','/keypairgen']},
   {label:'Administration',keys:['/system','/dbschema','/audit','/access/users','/access/roles']},
 ]

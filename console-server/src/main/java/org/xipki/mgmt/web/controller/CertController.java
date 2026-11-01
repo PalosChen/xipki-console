@@ -3,6 +3,8 @@ package org.xipki.mgmt.web.controller;
 import org.xipki.mgmt.web.core.*;
 
 import javax.security.auth.x500.X500Principal;
+import javax.naming.InvalidNameException;
+import javax.naming.ldap.LdapName;
 import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.CaManager;
 import org.xipki.mgmt.web.dto.ApiResponse;
@@ -35,16 +37,21 @@ public class CertController {
     }
 
     public ApiResponse<List<CertDto>> listCerts(
+            HttpServletResponse response,
             String ca,
             String subject,
             String validFrom,
             String validTo,
             String orderBy,
-            int limit) throws CaMgmtException {
+            int limit,
+            boolean paged,
+            String cursor) throws CaMgmtException {
 
         CertificateMaterial.required(ca);
         if (limit < 1 || limit > 1000) throw new IllegalArgumentException("Invalid query limit");
         X500Principal subjectPattern = (subject != null && !subject.isEmpty()) ? new X500Principal(subject) : null;
+        String subjectGlob = subjectPattern == null ? null : subjectGlob(subjectPattern);
+        if (subjectGlob != null && subjectGlob.indexOf('%') >= 0) throw new IllegalArgumentException("Invalid subject pattern");
         Instant from = CertificateMaterial.time(validFrom);
         Instant to = CertificateMaterial.time(validTo);
         CertificateMaterial.range(from, to);
@@ -53,14 +60,25 @@ public class CertController {
         var identity=access.require("CERT_READ",ca,null); ca=identity.name();
         service.requireStarted(ca);
         if(!access.allows("CERT_READ_ALL",identity,null)) {
+            if(!paged && cursor!=null) throw new IllegalArgumentException("Cursor requires paged search");
+            List<String> serials;
+            if(paged) {
+                var page=ownership.page(identity,cursor);
+                if(page.nextCursor()!=null) response.setHeader("X-Next-Cursor",page.nextCursor());
+                serials=page.serials();
+            } else {
+                serials=ownership.serials(identity,1001);
+                if(serials.size()>1000) throw new ApiException(409,"Certificate history exceeds the legacy query limit; use paged=true");
+            }
             var own=new ArrayList<CertDto>();
-            for(String serial:ownership.serials(identity,1000)) {
+            for(String serial:serials) {
                 var info=service.getCaManager().getCert(ca,CertificateMaterial.serial(serial));
                 if(info==null) continue;
                 var cert=info.getCert().getCert();
-                if(subjectPattern!=null && !cert.getSubjectText().toLowerCase(Locale.ROOT).contains(subject.toLowerCase(Locale.ROOT))) continue;
-                if(from!=null && cert.getNotBefore().isBefore(from)) continue;
-                if(to!=null && cert.getNotAfter().isAfter(to)) continue;
+                if(subjectGlob!=null && !matchesSubject(subjectGlob,cert.getSubjectText())) continue;
+                // Match XiPKI's listCertificates predicates, including its second-level bounds.
+                if(from!=null && cert.getNotBefore().getEpochSecond()>=from.getEpochSecond()-1) continue;
+                if(to!=null && cert.getNotAfter().getEpochSecond()<=to.getEpochSecond()) continue;
                 own.add(CertDto.fromCertWithRevocation(info));
             }
             Comparator<CertDto> comparator=orderBy.startsWith("subject") ? Comparator.comparing(CertDto::getSubject)
@@ -68,12 +86,42 @@ public class CertController {
             own.sort(orderBy.endsWith("-desc")?comparator.reversed():comparator);
             return ApiResponse.ok(own.stream().limit(limit).toList());
         }
+        if(cursor!=null) throw new IllegalArgumentException("Cursor is only valid for personal certificates");
 
         List<CertListInfo> certs = service.getCaManager().listCertificates(ca, subjectPattern, from, to, order, limit);
         List<CertDto> result = certs.stream()
                 .map(CertDto::fromCertListInfo)
                 .collect(Collectors.toList());
         return ApiResponse.ok(result);
+    }
+
+    private static String subjectGlob(X500Principal principal) {
+        try {
+            var rdns = new ArrayList<>(new LdapName(principal.getName(X500Principal.RFC2253)).getRdns());
+            Collections.reverse(rdns);
+            return rdns.stream().map(Object::toString).collect(Collectors.joining("*")).toLowerCase(Locale.ROOT);
+        } catch (InvalidNameException ex) {
+            throw new IllegalArgumentException("Invalid subject pattern", ex);
+        }
+    }
+
+    private static boolean matchesSubject(String glob, String subject) {
+        String pattern = "*" + glob + "*";
+        String value = subject.toLowerCase(Locale.ROOT);
+        int p = 0, s = 0, star = -1, retry = 0;
+        while (s < value.length()) {
+            if (p < pattern.length() && (pattern.charAt(p) == '_' || pattern.charAt(p) == value.charAt(s))) {
+                p++; s++;
+            } else if (p < pattern.length() && pattern.charAt(p) == '*') {
+                star = p++; retry = s;
+            } else if (star >= 0) {
+                p = star + 1; s = ++retry;
+            } else {
+                return false;
+            }
+        }
+        while (p < pattern.length() && pattern.charAt(p) == '*') p++;
+        return p == pattern.length();
     }
 
     public ApiResponse<CertDto> getCert(String ca,

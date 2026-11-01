@@ -1,7 +1,7 @@
 import { useI18n } from '../i18n'
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Alert, Button, Drawer, Layout, Menu, Typography, type MenuProps } from 'antd'
+import { Alert, Button, ConfigProvider, Drawer, Layout, Menu, Typography, type MenuProps } from 'antd'
 import {
   DashboardOutlined, SafetyCertificateOutlined, FileProtectOutlined,
   KeyOutlined, UserOutlined, CloudUploadOutlined, ToolOutlined,
@@ -16,6 +16,10 @@ import AccountMenu from '../components/AccountMenu'
 import './MainLayout.css'
 
 const { Sider, Content } = Layout
+const sidebarTheme = { components: { Menu: {
+  darkGroupTitleColor: 'rgba(255, 255, 255, 0.50)',
+  darkItemColor: 'rgba(255, 255, 255, 0.88)',
+} } }
 
 const icons: Record<NavigationKey, React.ReactNode> = {
   '/dashboard': <DashboardOutlined />,
@@ -47,11 +51,11 @@ const MainLayout: React.FC<Props> = ({ children, user, onLogout }) => {
   const location = useLocation()
   const [caAvailable, setCaAvailable] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const selectedKey = selectedNavigationKey(location.pathname)
   const menuItems: MenuProps['items'] = visibleNavigationGroups(user).map(group=>({
     type: 'group', label: t(group.label), key: group.label,
     children: group.items.map(item=>({key:item.key,icon:icons[item.key],label:t(item.label)})),
   }))
-  const selectedKey = selectedNavigationKey(location.pathname)
   const selectMenu: MenuProps['onClick'] = ({key}) => {setMobileMenuOpen(false);navigate(key)}
   useEffect(()=>setMobileMenuOpen(false),[location.pathname])
   useEffect(() => {
@@ -77,13 +81,15 @@ const MainLayout: React.FC<Props> = ({ children, user, onLogout }) => {
         <div className="console-nav-brand">
           <Typography.Title level={4}>{t('XiPKI Management')}</Typography.Title>
         </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={selectedKey ? [selectedKey] : []}
-          items={menuItems}
-          onClick={selectMenu}
-        />
+        <ConfigProvider theme={sidebarTheme}>
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={selectedKey ? [selectedKey] : []}
+            items={menuItems}
+            onClick={selectMenu}
+          />
+        </ConfigProvider>
       </Sider>
       <Layout>
         <ApplicationHeader brand={<Button className="console-menu-trigger" type="text" icon={<MenuOutlined />}

@@ -43,6 +43,36 @@ class IdentityDatabaseTest {
         assertTrue(passwords.matches(PASSWORD,hash));assertTrue(new WebDatabaseHealth(jdbc).isReady());
     }
 
+    @Test void certificateOwnershipCursorVisitsEveryOwnedSerial() {
+        administrator();
+        var identity = new AccessControl.CaIdentity("ownership-test", "f".repeat(64));
+        long userId = AccountService.principal().id();
+        try {
+            for (int serial = 1; serial <= 101; serial++)
+                jdbc.update("INSERT INTO web_certificate_owner(ca_name,ca_fingerprint,serial_number,user_id,profile_name) VALUES (?,?,?,?,?)",
+                        identity.name(), identity.fingerprint(), Integer.toHexString(serial), userId, "test");
+            var ownership = new CertificateOwnership(jdbc);
+            assertEquals(101, ownership.serials(identity, 1001).size());
+            var seen = new HashSet<String>();
+            String cursor = null;
+            int pages = 0;
+            do {
+                var page = ownership.page(identity, cursor);
+                assertTrue(page.serials().size() <= 5);
+                for (String serial : page.serials())
+                    assertTrue(seen.add(serial), "Cursor pages must not repeat serials");
+                cursor = page.nextCursor();
+                pages++;
+            } while (cursor != null);
+            assertEquals(21, pages);
+            assertEquals(101, seen.size());
+            assertThrows(IllegalArgumentException.class, () -> ownership.page(identity, "invalid-cursor"));
+        } finally {
+            jdbc.update("DELETE FROM web_certificate_owner WHERE ca_name=? AND ca_fingerprint=? AND user_id=?",
+                    identity.name(), identity.fingerprint(), userId);
+        }
+    }
+
     @Test void fixationCsrfIdleRecentAndVersionRevocationUseStoredState() {
         Exchange initial=new Exchange();String oldCsrf=sessions.csrf(initial.req,initial.resp),oldCookie=initial.cookie();
         var admin=users.loadUserByUsername(ADMIN);sessions.login(initial.req,initial.resp,admin);

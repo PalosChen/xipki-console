@@ -1,6 +1,6 @@
 import api from './client'
 
-export type CertificateQuery = { ca: string; subject?: string; validFrom?: string; validTo?: string; orderBy?: string; limit?: number }
+export type CertificateQuery = { ca: string; subject?: string; validFrom?: string; validTo?: string; orderBy?: string; limit?: number; paged?: boolean; cursor?: string }
 export type KeyCertificateRequest = { ca: string; profile: string; subject: string; notBefore?: string; notAfter?: string; downloadPassword: string }
 const path = (ca: string, serial: string) => `/api/cert/${encodeURIComponent(ca)}/${encodeURIComponent(serial)}`
 

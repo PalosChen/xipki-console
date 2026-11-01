@@ -20,12 +20,12 @@ class CaAvailabilityTest {
     @Test void inactiveCaIsRejectedBeforeRemoteCertificateQuery() throws Exception {
         var client=new Client();var service=new CaManagementService(client);
         var controller=new CertController(service,authorized(service),null);
-        var error=assertThrows(ApiException.class,()->controller.listCerts("inactive",null,null,null,"notBefore",50));
+        var error=assertThrows(ApiException.class,()->controller.listCerts(null,"inactive",null,null,null,"notBefore",50,false,null));
         assertEquals(409,error.status());assertTrue(error.getMessage().contains("not running"));assertEquals(0,client.queries);
     }
     @Test void runningCaStillUsesCertificateQuery() throws Exception {
         var client=new Client();var service=new CaManagementService(client);
-        assertTrue(new CertController(service,authorized(service),null).listCerts("running",null,null,null,"notBefore",50).data.isEmpty());
+        assertTrue(new CertController(service,authorized(service),null).listCerts(null,"running",null,null,null,"notBefore",50,false,null).data.isEmpty());
         assertEquals(1,client.queries);
     }
     @Test void inactiveCaIsRejectedBeforeCrlOperations() throws Exception {

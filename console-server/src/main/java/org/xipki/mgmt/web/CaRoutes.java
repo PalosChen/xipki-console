@@ -52,7 +52,7 @@ public final class CaRoutes {
         routes.add("POST", "/api/ca-enrollments/{id}/cancel", r -> operations.cancel(r.path("id"), r.body(CaEnrollmentDtos.Action.class), r.req()));
 
         var cert = new CertController(service, access, ownership);
-        routes.add("GET", "/api/cert", r -> cert.listCerts(r.required("ca"), r.param("subject"), r.param("validFrom"), r.param("validTo"), r.param("orderBy", "notBefore"), r.integer("limit", 20)));
+        routes.add("GET", "/api/cert", r -> cert.listCerts(r.resp(), r.required("ca"), r.param("subject"), r.param("validFrom"), r.param("validTo"), r.param("orderBy", "notBefore"), r.integer("limit", 20), r.bool("paged", false), r.param("cursor")));
         routes.add("GET", "/api/cert/{ca}/{serial}", r -> cert.getCert(r.path("ca"), r.path("serial")));
         routes.add("POST", "/api/cert/enroll", r -> cert.enrollCert(r.req(), r.required("ca"), r.required("profile"), r.upload("csr"), r.param("notBefore"), r.param("notAfter")));
         routes.add("POST", "/api/cert/enroll-cross", r -> cert.enrollCross(r.req(), r.required("ca"), r.required("profile"), r.upload("csr"), r.upload("targetCert"), r.param("notBefore"), r.param("notAfter")));
