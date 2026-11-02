@@ -1,14 +1,31 @@
-import api from './client'
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 
-export function entityEditPayload(values: any, editing: boolean) {
+import api from './client'
+import type { ApiEnvelope, EntityPayload, EntityRecord, FormValues } from '../types/api'
+
+export function entityEditPayload(values: FormValues, editing: boolean): EntityPayload {
   const { name, type, base64Cert, conf, replaceConf } = values
-  const payload: any = { ...(editing ? {} : { name }), ...(type === undefined ? {} : { type }),
-    ...(base64Cert === undefined ? {} : { base64Cert }) }
+  const payload: EntityPayload = {}
+  if (!editing) {
+    if (typeof name !== 'string' || !name.trim()) throw new Error('A name is required')
+    payload.name = name
+  }
+  if (typeof type === 'string') payload.type = type
+  if (typeof base64Cert === 'string') payload.base64Cert = base64Cert
   if (!editing || replaceConf) {
-    if ((editing && !conf?.trim()) || conf?.includes('****') || conf?.includes('<redacted>') || conf?.includes('<sensitive>')) {
+    const configuration = typeof conf === 'string' ? conf : undefined
+    if (
+      (editing && !configuration?.trim()) ||
+      configuration?.includes('****') ||
+      configuration?.includes('<redacted>') ||
+      configuration?.includes('<sensitive>')
+    ) {
       throw new Error('Enter the complete configuration; masked values cannot be saved')
     }
-    if (conf !== undefined) payload.conf = conf
+    if (configuration !== undefined) payload.conf = configuration
     if (editing) payload.replaceConf = true
   }
   return payload
@@ -16,10 +33,12 @@ export function entityEditPayload(values: any, editing: boolean) {
 
 function crudApi(base: string) {
   return {
-    list: () => api.get(base),
-    get: (name: string) => api.get(`${base}/${encodeURIComponent(name)}`),
-    create: (data: any) => api.post(base, data),
-    update: (name: string, data: any) => api.put(`${base}/${encodeURIComponent(name)}`, data),
+    list: () => api.get<ApiEnvelope<EntityRecord[]>>(base),
+    get: (name: string) =>
+      api.get<ApiEnvelope<EntityRecord>>(`${base}/${encodeURIComponent(name)}`),
+    create: (data: EntityPayload) => api.post(base, data),
+    update: (name: string, data: EntityPayload) =>
+      api.put(`${base}/${encodeURIComponent(name)}`, data),
     remove: (name: string) => api.delete(`${base}/${encodeURIComponent(name)}`),
   }
 }
@@ -28,7 +47,7 @@ function crudWithCaApi(base: string) {
   return {
     ...crudApi(base),
     getForCa: (ca: string) => api.get(`${base}/ca/${encodeURIComponent(ca)}`),
-    addToCa: (name: string, ca: string, data?: any) =>
+    addToCa: (name: string, ca: string, data?: EntityPayload) =>
       api.post(`${base}/${encodeURIComponent(name)}/ca/${encodeURIComponent(ca)}`, data || {}),
     removeFromCa: (name: string, ca: string) =>
       api.delete(`${base}/${encodeURIComponent(name)}/ca/${encodeURIComponent(ca)}`),
@@ -37,12 +56,13 @@ function crudWithCaApi(base: string) {
 
 export const profileApi = {
   ...crudWithCaApi('/api/profile'),
-  associationsForCa: (ca: string) => api.get(`/api/profile/ca/${encodeURIComponent(ca)}/associations`),
+  associationsForCa: (ca: string) =>
+    api.get(`/api/profile/ca/${encodeURIComponent(ca)}/associations`),
 }
 export const signerApi = crudApi('/api/signer')
 export const requestorApi = {
   ...crudWithCaApi('/api/requestor'),
-  updateForCa: (name: string, ca: string, data: any) =>
+  updateForCa: (name: string, ca: string, data: EntityPayload) =>
     api.put(`/api/requestor/${encodeURIComponent(name)}/ca/${encodeURIComponent(ca)}`, data),
 }
 export const publisherApi = crudWithCaApi('/api/publisher')

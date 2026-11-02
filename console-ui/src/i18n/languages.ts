@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
+
 import type { Locale as AntdLocale } from 'antd/es/locale'
 import antdEnglish from 'antd/locale/en_US.js'
 import antdChinese from 'antd/locale/zh_CN.js'
@@ -26,18 +31,43 @@ function componentLocale(value: AntdLocale | { default: AntdLocale }): AntdLocal
 /** Add a language here: labels, bundled translations and UI/date configuration. */
 export const languages = {
   'en-US': {
-    label: 'English', antd: componentLocale(antdEnglish), dayjs: 'en',
-    messages: { common: enCommon, access: enAccess, ca: enCa, certificates: enCertificates, resources: enResources, system: enSystem, guide: enGuide },
+    label: 'English',
+    antd: componentLocale(antdEnglish),
+    dayjs: 'en',
+    messages: {
+      common: enCommon,
+      access: enAccess,
+      ca: enCa,
+      certificates: enCertificates,
+      resources: enResources,
+      system: enSystem,
+      guide: enGuide,
+    },
   },
   'zh-CN': {
-    label: '简体中文', antd: componentLocale(antdChinese), dayjs: 'zh-cn',
-    messages: { common: zhCommon, access: zhAccess, ca: zhCa, certificates: zhCertificates, resources: zhResources, system: zhSystem, guide: zhGuide },
+    label: '简体中文',
+    antd: componentLocale(antdChinese),
+    dayjs: 'zh-cn',
+    messages: {
+      common: zhCommon,
+      access: zhAccess,
+      ca: zhCa,
+      certificates: zhCertificates,
+      resources: zhResources,
+      system: zhSystem,
+      guide: zhGuide,
+    },
   },
 } as const
 
 export type Locale = keyof typeof languages
 export const defaultLocale: Locale = 'en-US'
 export const localeStorageKey = 'xipki.locale'
-export const languageOptions = Object.entries(languages).map(([value, definition]) => ({ value, label: definition.label }))
+export const languageOptions = Object.entries(languages).map(([value, definition]) => ({
+  value,
+  label: definition.label,
+}))
 export const normalizeLocale = (value: string | null): Locale =>
-  value !== null && Object.prototype.hasOwnProperty.call(languages, value) ? value as Locale : defaultLocale
+  value !== null && Object.prototype.hasOwnProperty.call(languages, value)
+    ? (value as Locale)
+    : defaultLocale

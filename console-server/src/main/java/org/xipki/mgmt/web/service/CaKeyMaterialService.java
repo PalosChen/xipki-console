@@ -1,6 +1,7 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.service;
 
 import java.io.ByteArrayInputStream;
@@ -33,10 +34,13 @@ public class CaKeyMaterialService {
   public CaKeyMaterialService() {}
 
   public Material prepare(CaKeyRequest request, X509Cert expected, boolean allowGenerate) {
-    if (request == null || request.mode == null)
+    if (request == null || request.mode == null) {
       throw new IllegalArgumentException("Signer material required");
+    }
     try {
-      if ("pkcs11".equals(request.mode)) return pkcs11(request);
+      if ("pkcs11".equals(request.mode)) {
+        return pkcs11(request);
+      }
       KeyStore store;
       char[] inputPassword;
       if ("generate".equals(request.mode) && allowGenerate) {
@@ -49,7 +53,9 @@ public class CaKeyMaterialService {
           generator = KeyPairGenerator.getInstance("EC");
           generator.initialize(
               new ECGenParameterSpec(algorithm.equals("EC_P256") ? "secp256r1" : "secp384r1"));
-        } else throw new IllegalArgumentException("Unsupported key algorithm");
+        } else {
+          throw new IllegalArgumentException("Unsupported key algorithm");
+        }
         var pair = generator.generateKeyPair();
         inputPassword = randomPassword().toCharArray();
         store = KeyStore.getInstance("PKCS12");
@@ -63,7 +69,9 @@ public class CaKeyMaterialService {
         inputPassword = Objects.requireNonNullElse(request.password, "").toCharArray();
         store = KeyStore.getInstance("PKCS12");
         store.load(new ByteArrayInputStream(decode(request.pkcs12)), inputPassword);
-      } else throw new IllegalArgumentException("Unsupported signer mode");
+      } else {
+        throw new IllegalArgumentException("Unsupported signer mode");
+      }
 
       try {
         List<String> aliases =
@@ -79,15 +87,22 @@ public class CaKeyMaterialService {
                 .toList();
         String alias = request.keyAlias;
         if (alias == null || alias.isBlank()) {
-          if (aliases.size() != 1) throw new IllegalArgumentException("Select a key alias");
+          if (aliases.size() != 1) {
+            throw new IllegalArgumentException("Select a key alias");
+          }
           alias = aliases.get(0);
         }
-        if (!aliases.contains(alias)) throw new IllegalArgumentException("Invalid key alias");
+        if (!aliases.contains(alias)) {
+          throw new IllegalArgumentException("Invalid key alias");
+        }
         var key = store.getKey(alias, inputPassword);
-        if (!(key instanceof PrivateKey privateKey))
+        if (!(key instanceof PrivateKey privateKey)) {
           throw new IllegalArgumentException("Private key required");
+        }
         var certificate = store.getCertificate(alias);
-        if (certificate == null) throw new IllegalArgumentException("Key certificate required");
+        if (certificate == null) {
+          throw new IllegalArgumentException("Key certificate required");
+        }
         String algorithm =
             signatureAlgorithm(privateKey.getAlgorithm(), request.signatureAlgorithm);
         Signature signature = Signature.getInstance(algorithm);
@@ -99,8 +114,9 @@ public class CaKeyMaterialService {
         signature.initVerify(
             expected == null ? certificate.getPublicKey() : expected.getPublicKey());
         signature.update(challenge);
-        if (!signature.verify(proof))
+        if (!signature.verify(proof)) {
           throw new IllegalArgumentException("CA key does not match certificate");
+        }
 
         // Repackage only the selected key; don't transmit unrelated keys or the supplied password.
         String password = randomPassword();
@@ -137,8 +153,9 @@ public class CaKeyMaterialService {
         "RSA".equalsIgnoreCase(keyAlgorithm)
             ? Set.of("SHA256withRSA", "SHA384withRSA", "SHA512withRSA")
             : Set.of("SHA256withECDSA", "SHA384withECDSA", "SHA512withECDSA");
-    if (!permitted.contains(algorithm))
+    if (!permitted.contains(algorithm)) {
       throw new IllegalArgumentException("Unsupported signature algorithm");
+    }
     return algorithm;
   }
 
@@ -161,7 +178,11 @@ public class CaKeyMaterialService {
             password);
         var chain = new ArrayList<java.security.cert.Certificate>();
         chain.add(certificate.toJceCert());
-        if (issuers != null) for (var issuer : issuers) chain.add(issuer.toJceCert());
+        if (issuers != null) {
+          for (var issuer : issuers) {
+            chain.add(issuer.toJceCert());
+          }
+        }
         selected.setKeyEntry(
             "main",
             selected.getKey("main", password),
@@ -186,36 +207,48 @@ public class CaKeyMaterialService {
     if (r.module == null
         || !r.module.matches("[a-zA-Z0-9_.-]{1,64}")
         || r.slotIndex == null
-        || r.slotIndex < 0) throw new IllegalArgumentException("Invalid module/slot");
-    if ((r.keyId == null) == (r.keyLabel == null))
+        || r.slotIndex < 0) {
+      throw new IllegalArgumentException("Invalid module/slot");
+    }
+    if ((r.keyId == null) == (r.keyLabel == null)) {
       throw new IllegalArgumentException("Select key ID or label");
+    }
     var pairs = new ConfPairs().putPair("module", r.module).putPair("slot", r.slotIndex.toString());
     String algorithm = Objects.requireNonNullElse(r.signatureAlgorithm, "SHA256withRSA");
     if (!Set.of(
             "SHA256withRSA", "SHA384withRSA", "SHA512withRSA", "SHA256withECDSA", "SHA384withECDSA")
-        .contains(algorithm)) throw new IllegalArgumentException("Unsupported signature algorithm");
+        .contains(algorithm)) {
+      throw new IllegalArgumentException("Unsupported signature algorithm");
+    }
     pairs.putPair("algo", algorithm);
     if (r.keyId != null) {
-      if (!r.keyId.matches("[0-9a-fA-F]+") || r.keyId.length() % 2 != 0)
+      if (!r.keyId.matches("[0-9a-fA-F]+") || r.keyId.length() % 2 != 0) {
         throw new IllegalArgumentException("Invalid key ID");
+      }
       pairs.putPair("key-id", r.keyId);
     } else {
-      if (r.keyLabel.isBlank() || r.keyLabel.length() > 256)
+      if (r.keyLabel.isBlank() || r.keyLabel.length() > 256) {
         throw new IllegalArgumentException("Invalid key label");
+      }
       pairs.putPair("key-label", r.keyLabel);
     }
     return new Material("PKCS11", pairs.getEncoded());
   }
 
   public static byte[] decode(String value) {
-    if (value == null || value.isBlank()) throw new IllegalArgumentException("Material required");
-    if (value.length() > (MATERIAL_LIMIT * 4L / 3 + 8))
+    if (value == null || value.isBlank()) {
+      throw new IllegalArgumentException("Material required");
+    }
+    if (value.length() > (MATERIAL_LIMIT * 4L / 3 + 8)) {
       throw new ApiException(413, "Payload too large");
+    }
     byte[] bytes =
         value.stripLeading().startsWith("-----BEGIN")
             ? value.strip().getBytes(StandardCharsets.US_ASCII)
             : Base64.getDecoder().decode(value);
-    if (bytes.length > MATERIAL_LIMIT) throw new ApiException(413, "Payload too large");
+    if (bytes.length > MATERIAL_LIMIT) {
+      throw new ApiException(413, "Payload too large");
+    }
     return bytes;
   }
 
@@ -230,16 +263,22 @@ public class CaKeyMaterialService {
   }
 
   public static java.util.List<X509Cert> certificates(java.util.List<String> values) {
-    if (values == null) return null;
+    if (values == null) {
+      return null;
+    }
     var result = new java.util.ArrayList<X509Cert>();
     for (String value : values) {
       byte[] bytes = decode(value);
       try {
         if (new String(bytes, StandardCharsets.US_ASCII).stripLeading().startsWith("-----BEGIN")) {
           var bundle = X509Util.parseCerts(bytes);
-          if (bundle.isEmpty()) throw new IllegalArgumentException("Certificate chain is empty");
+          if (bundle.isEmpty()) {
+            throw new IllegalArgumentException("Certificate chain is empty");
+          }
           result.addAll(bundle);
-        } else result.add(X509Util.parseCert(bytes));
+        } else {
+          result.add(X509Util.parseCert(bytes));
+        }
       } catch (Exception ex) {
         throw new IllegalArgumentException("Invalid certificate chain");
       }
@@ -251,8 +290,9 @@ public class CaKeyMaterialService {
     try {
       var cert = certificate.toJceCert();
       boolean[] usage = cert.getKeyUsage();
-      if (cert.getBasicConstraints() < 0 || usage == null || usage.length <= 5 || !usage[5])
+      if (cert.getBasicConstraints() < 0 || usage == null || usage.length <= 5 || !usage[5]) {
         throw new IllegalArgumentException("CA certificate with keyCertSign required");
+      }
     } catch (IllegalArgumentException ex) {
       throw ex;
     } catch (Exception ex) {

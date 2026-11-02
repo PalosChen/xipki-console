@@ -1,6 +1,7 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.controller;
 
 import java.time.Instant;
@@ -13,10 +14,15 @@ import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.*;
 import org.xipki.mgmt.web.security.AccessControl;
 import org.xipki.mgmt.web.security.AccountService;
+import org.xipki.mgmt.web.security.CaFieldPermissions;
 import org.xipki.mgmt.web.security.RecentAuthentication;
+import org.xipki.mgmt.web.service.CaCertificateValidationService;
 import org.xipki.mgmt.web.service.CaConfigurationMapper;
 import org.xipki.mgmt.web.service.CaConfigurationService;
+import org.xipki.mgmt.web.service.CaEnrollmentRepository;
+import org.xipki.mgmt.web.service.CaKeyMaterialService;
 import org.xipki.mgmt.web.service.CaManagementService;
+import org.xipki.pkix.util.misc.PemEncoder;
 
 /**
  * CA management controller.
@@ -29,14 +35,14 @@ public class CaController {
   private final CaConfigurationService configuration;
   private final AccessControl access;
   private final AccountService accounts;
-  private final org.xipki.mgmt.web.service.CaEnrollmentRepository enrollments;
+  private final CaEnrollmentRepository enrollments;
 
   public CaController(
       CaManagementService service,
       CaConfigurationService configuration,
       AccessControl access,
       AccountService accounts,
-      org.xipki.mgmt.web.service.CaEnrollmentRepository enrollments) {
+      CaEnrollmentRepository enrollments) {
     this.service = service;
     this.configuration = configuration;
     this.access = access;
@@ -104,16 +110,15 @@ public class CaController {
   public ApiResponse<Map<String, Object>> preflight(CaCertificateRequest request)
       throws CaMgmtException {
     access.requireGlobal("CA_IMPORT");
-    var cert = org.xipki.mgmt.web.service.CaKeyMaterialService.certificate(request.certificate);
+    var cert = CaKeyMaterialService.certificate(request.certificate);
     var check =
-        new org.xipki.mgmt.web.service.CaCertificateValidationService()
+        new CaCertificateValidationService()
             .validate(
                 cert,
-                org.xipki.mgmt.web.service.CaKeyMaterialService.certificates(
-                    request.certificateChain),
+                CaKeyMaterialService.certificates(request.certificateChain),
                 Optional.empty(),
                 Instant.now(),
-                org.xipki.mgmt.web.service.CaCertificateValidationService.ValidationPurpose.IMPORT);
+                CaCertificateValidationService.ValidationPurpose.IMPORT);
     var result = new LinkedHashMap<String, Object>();
     result.put("valid", check.valid());
     result.put("diagnostic", check.diagnostic());
@@ -124,12 +129,10 @@ public class CaController {
     result.put("pathLength", check.pathLength());
     result.put(
         "chainFingerprints",
-        check.chain().stream()
-            .map(org.xipki.mgmt.web.service.CaCertificateValidationService::fingerprint)
-            .toList());
+        check.chain().stream().map(CaCertificateValidationService::fingerprint).toList());
     result.put("notBefore", cert.getNotBefore().toString());
     result.put("notAfter", cert.getNotAfter().toString());
-    if (check.valid())
+    if (check.valid()) {
       try {
         result.put(
             "revocationCheck",
@@ -138,6 +141,7 @@ public class CaController {
         result.put("valid", false);
         result.put("diagnostic", "Certificate chain contains a known revoked certificate");
       }
+    }
     return ApiResponse.ok(result);
   }
 
@@ -153,7 +157,7 @@ public class CaController {
 
   public ApiResponse<Void> updateCa(String name, CaConfigurationRequest request)
       throws CaMgmtException {
-    name = org.xipki.mgmt.web.security.CaFieldPermissions.authorize(access, name, request);
+    name = CaFieldPermissions.authorize(access, name, request);
     configuration.update(name, request);
     return ApiResponse.ok();
   }
@@ -161,20 +165,26 @@ public class CaController {
   public Reply<byte[]> certificates(String name, String format) throws CaMgmtException {
     name = access.require("CA_READ", name, null).name();
     var entry = configuration.required(name);
-    if (entry.getCert() == null) throw new ApiException(404, "CA certificate not found");
-    if ("der".equals(format))
+    if (entry.getCert() == null) {
+      throw new ApiException(404, "CA certificate not found");
+    }
+    if ("der".equals(format)) {
       return Reply.ok()
           .contentType("application/pkix-cert")
           .header("Content-Disposition", "attachment; filename=\"ca-certificate.der\"")
           .body(entry.getCert().getEncoded());
-    if (!"pem".equals(format)) throw new IllegalArgumentException("Unsupported certificate format");
+    }
+    if (!"pem".equals(format)) {
+      throw new IllegalArgumentException("Unsupported certificate format");
+    }
     var certs = service.getCaManager().getCaCerts(name);
-    if (certs == null || certs.isEmpty()) certs = List.of(entry.getCert());
+    if (certs == null || certs.isEmpty()) {
+      certs = List.of(entry.getCert());
+    }
     var output = new java.io.ByteArrayOutputStream();
-    for (var cert : certs)
-      output.writeBytes(
-          org.xipki.pkix.util.misc.PemEncoder.encode(
-              cert.getEncoded(), org.xipki.pkix.util.misc.PemEncoder.PemLabel.CERTIFICATE));
+    for (var cert : certs) {
+      output.writeBytes(PemEncoder.encode(cert.getEncoded(), PemEncoder.PemLabel.CERTIFICATE));
+    }
     return Reply.ok()
         .contentType("application/x-pem-file")
         .header("Content-Disposition", "attachment; filename=\"ca-certificates.pem\"")
@@ -185,8 +195,9 @@ public class CaController {
     var identity = access.require("CA_DELETE", name, null);
     name = identity.name();
     RecentAuthentication.require();
-    if (!name.equals(confirmName))
+    if (!name.equals(confirmName)) {
       throw new IllegalArgumentException("CA name confirmation required");
+    }
     String caName = name;
     CaRemoval.remove(
         service.getCaManager(),
@@ -200,11 +211,13 @@ public class CaController {
     name = access.require("CA_REVOKE", name, null).name();
     String reasonStr = request.getOrDefault("reason", "unspecified");
     CrlReason reason = CrlReason.forNameOrText(reasonStr);
-    if (reason == CrlReason.REMOVE_FROM_CRL)
+    if (reason == CrlReason.REMOVE_FROM_CRL) {
       throw new IllegalArgumentException("Use unrevoke instead");
+    }
     Instant invalidity = CaConfigurationService.instant(request.get("invalidityTime"));
-    if (invalidity != null && invalidity.isAfter(Instant.now()))
+    if (invalidity != null && invalidity.isAfter(Instant.now())) {
       throw new IllegalArgumentException("Invalidity time cannot be in the future");
+    }
     CertRevocationInfo revInfo = new CertRevocationInfo(reason, Instant.now(), invalidity);
     service.getCaManager().revokeCa(name, revInfo);
     return ApiResponse.ok();
@@ -230,7 +243,9 @@ public class CaController {
     Map<String, String> result = new LinkedHashMap<>();
     for (String alias : aliases) {
       String name = mgr.getCaNameForAlias(alias);
-      if (access.allowed("CA_READ", name, null)) result.put(alias, name);
+      if (access.allowed("CA_READ", name, null)) {
+        result.put(alias, name);
+      }
     }
     return ApiResponse.ok(result);
   }
@@ -254,15 +269,21 @@ public class CaController {
     var children = new ArrayList<String>();
     var references = new ArrayList<String>();
     for (String visible : access.visibleCaNames()) {
-      if (visible.equals(name)) continue;
+      if (visible.equals(name)) {
+        continue;
+      }
       var entry = manager.getCa(visible);
-      if (entry == null) continue;
+      if (entry == null) {
+        continue;
+      }
       var related = configuration.describe(entry);
-      if (identity.fingerprint().equals(related.getParentCertificateFingerprint()))
+      if (identity.fingerprint().equals(related.getParentCertificateFingerprint())) {
         children.add(visible);
+      }
       if (related.getChainCertificateFingerprints() != null
-          && related.getChainCertificateFingerprints().contains(identity.fingerprint()))
+          && related.getChainCertificateFingerprints().contains(identity.fingerprint())) {
         references.add(visible);
+      }
     }
     return ApiResponse.ok(
         Map.of(

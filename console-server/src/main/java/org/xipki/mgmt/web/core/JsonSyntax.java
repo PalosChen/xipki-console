@@ -1,6 +1,7 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.core;
 
 import java.util.*;
@@ -29,19 +30,25 @@ final class JsonSyntax {
     JsonSyntax syntax = new JsonSyntax(text);
     Shape result = syntax.value(0);
     syntax.space();
-    if (syntax.position != text.length()) throw invalid();
+    if (syntax.position != text.length()) {
+      throw invalid();
+    }
     return result;
   }
 
   private Shape value(int depth) {
-    if (depth > 128) throw invalid();
+    if (depth > 128) {
+      throw invalid();
+    }
     space();
     char c = peek();
     if (c == '{') {
       position++;
       space();
       Map<String, Shape> fields = new LinkedHashMap<>();
-      if (take('}')) return new Shape(fields, null);
+      if (take('}')) {
+        return new Shape(fields, null);
+      }
       do {
         space();
         int start = position;
@@ -58,9 +65,13 @@ final class JsonSyntax {
         space();
         require(':');
         Shape child = value(depth + 1);
-        if (fields.putIfAbsent(key, child) != null) throw invalid();
+        if (fields.putIfAbsent(key, child) != null) {
+          throw invalid();
+        }
         space();
-        if (take('}')) return new Shape(fields, null);
+        if (take('}')) {
+          return new Shape(fields, null);
+        }
         require(',');
       } while (true);
     }
@@ -68,11 +79,15 @@ final class JsonSyntax {
       position++;
       space();
       List<Shape> items = new ArrayList<>();
-      if (take(']')) return new Shape(null, items);
+      if (take(']')) {
+        return new Shape(null, items);
+      }
       do {
         items.add(value(depth + 1));
         space();
-        if (take(']')) return new Shape(null, items);
+        if (take(']')) {
+          return new Shape(null, items);
+        }
         require(',');
       } while (true);
     }
@@ -80,14 +95,17 @@ final class JsonSyntax {
       string();
       return SCALAR;
     }
-    for (String literal : List.of("true", "false", "null"))
+    for (String literal : List.of("true", "false", "null")) {
       if (text.startsWith(literal, position)) {
         position += literal.length();
         return SCALAR;
       }
+    }
     var matcher = NUMBER.matcher(text);
     matcher.region(position, text.length());
-    if (!matcher.lookingAt()) throw invalid();
+    if (!matcher.lookingAt()) {
+      throw invalid();
+    }
     position = matcher.end();
     return SCALAR;
   }
@@ -96,29 +114,40 @@ final class JsonSyntax {
     require('"');
     while (position < text.length()) {
       char c = text.charAt(position++);
-      if (c == '"') return;
-      if (c < 0x20) throw invalid();
+      if (c == '"') {
+        return;
+      }
+      if (c < 0x20) {
+        throw invalid();
+      }
       if (c == '\\') {
         c = peek();
         position++;
         if (c == 'u') {
           for (int i = 0; i < 4; i++) {
-            if (position >= text.length() || Character.digit(text.charAt(position++), 16) < 0)
+            if (position >= text.length() || Character.digit(text.charAt(position++), 16) < 0) {
               throw invalid();
+            }
           }
-        } else if ("\"\\/bfnrt".indexOf(c) < 0) throw invalid();
+        } else if ("\"\\/bfnrt".indexOf(c) < 0) {
+          throw invalid();
+        }
       }
     }
     throw invalid();
   }
 
   private char peek() {
-    if (position >= text.length()) throw invalid();
+    if (position >= text.length()) {
+      throw invalid();
+    }
     return text.charAt(position);
   }
 
   private void space() {
-    while (position < text.length() && " \t\r\n".indexOf(text.charAt(position)) >= 0) position++;
+    while (position < text.length() && " \t\r\n".indexOf(text.charAt(position)) >= 0) {
+      position++;
+    }
   }
 
   private boolean take(char c) {
@@ -130,7 +159,9 @@ final class JsonSyntax {
   }
 
   private void require(char c) {
-    if (!take(c)) throw invalid();
+    if (!take(c)) {
+      throw invalid();
+    }
   }
 
   private static IllegalArgumentException invalid() {

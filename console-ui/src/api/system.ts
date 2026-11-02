@@ -1,4 +1,10 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
+
 import api from './client'
+import type { ApiEnvelope, DashboardData } from '../types/api'
 
 export const systemApi = {
   status: () => api.get('/api/system/status'),
@@ -20,7 +26,7 @@ export const systemApi = {
   tokenInfo: (module?: string, slot?: number, verbose?: boolean) =>
     api.get('/api/system/token-info', { params: { module, slot, verbose } }),
   supportedTypes: () => api.get('/api/system/supported-types'),
-  dashboard: () => api.get('/api/dashboard'),
+  dashboard: () => api.get<ApiEnvelope<DashboardData>>('/api/dashboard'),
 }
 
 export const dbSchemaApi = {

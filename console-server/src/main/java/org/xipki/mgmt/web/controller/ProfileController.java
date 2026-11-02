@@ -1,6 +1,7 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.controller;
 
 import java.util.*;

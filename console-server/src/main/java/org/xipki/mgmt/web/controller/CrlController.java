@@ -1,12 +1,14 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.controller;
 
 import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.Crypto.*;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.ApiResponse;
+import org.xipki.mgmt.web.security.AccessControl;
 import org.xipki.mgmt.web.service.CaManagementService;
 
 /**
@@ -17,10 +19,9 @@ import org.xipki.mgmt.web.service.CaManagementService;
 public class CrlController {
 
   private final CaManagementService service;
-  private final org.xipki.mgmt.web.security.AccessControl access;
+  private final AccessControl access;
 
-  public CrlController(
-      CaManagementService service, org.xipki.mgmt.web.security.AccessControl access) {
+  public CrlController(CaManagementService service, AccessControl access) {
     this.service = service;
     this.access = access;
   }
@@ -49,14 +50,18 @@ public class CrlController {
   public Reply<byte[]> downloadCrl(String ca, String number) throws Exception {
     ca = access.require("CRL_READ", ca, null).name();
     service.requireStarted(ca);
-    if (!number.matches("[0-9]+")) throw new IllegalArgumentException("Invalid CRL number");
+    if (!number.matches("[0-9]+")) {
+      throw new IllegalArgumentException("Invalid CRL number");
+    }
     final long crlNumber;
     try {
       crlNumber = Long.parseLong(number);
     } catch (NumberFormatException ex) {
       throw new IllegalArgumentException("Invalid CRL number", ex);
     }
-    if (crlNumber <= 0) throw new IllegalArgumentException("Invalid CRL number");
+    if (crlNumber <= 0) {
+      throw new IllegalArgumentException("Invalid CRL number");
+    }
     X509Crl crl = service.getCaManager().getCrl(ca, crlNumber);
     if (crl == null) {
       return Reply.status(404).build();

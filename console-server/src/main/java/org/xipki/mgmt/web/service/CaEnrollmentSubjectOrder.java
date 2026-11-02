@@ -1,6 +1,7 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.service;
 
 import java.util.ArrayList;
@@ -68,12 +69,15 @@ public final class CaEnrollmentSubjectOrder {
   }
 
   public static List<String> parseOrder(String configured) {
-    if (configured == null || configured.isBlank()) return DEFAULT_ORDER;
+    if (configured == null || configured.isBlank()) {
+      return DEFAULT_ORDER;
+    }
     List<String> order = new ArrayList<>();
     for (String raw : configured.split(",", -1)) {
       String type = raw.trim();
-      if (!type.matches("[0-9]+(?:\\.[0-9]+)+") || order.contains(type))
+      if (!type.matches("[0-9]+(?:\\.[0-9]+)+") || order.contains(type)) {
         throw new IllegalArgumentException("Invalid XIPKI_CA_RDN_ORDER");
+      }
       order.add(type);
     }
     return List.copyOf(order);
@@ -83,8 +87,9 @@ public final class CaEnrollmentSubjectOrder {
       CaManager manager, String profile, X500Principal subject, List<String> caOrder)
       throws CaMgmtException {
     CertprofileEntry entry = manager.getCertprofile(profile);
-    if (entry == null || entry.isFaulty() || !"xijson".equalsIgnoreCase(entry.getType()))
+    if (entry == null || entry.isFaulty() || !"xijson".equalsIgnoreCase(entry.getType())) {
       throw new ApiException(400, "Cannot validate certificate profile subject order");
+    }
     try {
       JsonMap config = JsonParser.parseMap(entry.getConf(), false);
       Object raw = config.getObject("subject");
@@ -101,31 +106,42 @@ public final class CaEnrollmentSubjectOrder {
       }
       List<String> profileTypes = new ArrayList<>();
       for (JsonMap field : fields.toMapList()) {
-        if (field.getObject("value") != null)
+        if (field.getObject("value") != null) {
           throw new ApiException(
               400,
               "Certificate profile has a fixed subject value; online SubCA issuance cannot safely"
                   + " verify the issued subject");
+        }
         Object type = field.getObject("type");
-        if (type instanceof JsonMap typeMap) type = typeMap.getString("oid");
+        if (type instanceof JsonMap typeMap) {
+          type = typeMap.getString("oid");
+        }
         profileTypes.add(oid((String) type));
       }
-      if (!keepOrder) profileTypes.sort(Comparator.comparingInt(type -> position(type, caOrder)));
+      if (!keepOrder) {
+        profileTypes.sort(Comparator.comparingInt(type -> position(type, caOrder)));
+      }
       List<String> requestedTypes = new ArrayList<>();
       for (Rdn rdn : new LdapName(subject.getName(X500Principal.RFC2253)).getRdns()) {
-        if (rdn.size() != 1)
+        if (rdn.size() != 1) {
           throw new ApiException(400, "Cannot validate multi-valued CSR subject order");
+        }
         requestedTypes.add(oid(rdn.getType()));
       }
       List<String> expectedTypes = new ArrayList<>();
       for (String type : new java.util.LinkedHashSet<>(profileTypes)) {
-        for (String requested : requestedTypes) if (type.equals(requested)) expectedTypes.add(type);
+        for (String requested : requestedTypes) {
+          if (type.equals(requested)) {
+            expectedTypes.add(type);
+          }
+        }
       }
-      if (!expectedTypes.equals(requestedTypes))
+      if (!expectedTypes.equals(requestedTypes)) {
         throw new ApiException(
             400,
             "CSR subject order does not match the certificate profile; enter the DN in reverse"
                 + " profile order");
+      }
     } catch (ApiException ex) {
       throw ex;
     } catch (Exception ex) {
@@ -139,11 +155,16 @@ public final class CaEnrollmentSubjectOrder {
   }
 
   private static String oid(String name) {
-    if (name == null)
+    if (name == null) {
       throw new IllegalArgumentException("Cannot validate certificate profile subject order");
+    }
     String oid = TYPES.get(name.toLowerCase(Locale.ROOT));
-    if (oid != null) return oid;
-    if (name.matches("[0-9]+(?:\\.[0-9]+)+")) return name;
+    if (oid != null) {
+      return oid;
+    }
+    if (name.matches("[0-9]+(?:\\.[0-9]+)+")) {
+      return name;
+    }
     throw new IllegalArgumentException(
         "Cannot validate certificate profile subject order: unsupported RDN type " + name);
   }
@@ -173,6 +194,8 @@ public final class CaEnrollmentSubjectOrder {
   }
 
   private static void alias(Map<String, String> names, String oid, String... aliases) {
-    for (String alias : aliases) names.put(alias.toLowerCase(Locale.ROOT), oid);
+    for (String alias : aliases) {
+      names.put(alias.toLowerCase(Locale.ROOT), oid);
+    }
   }
 }

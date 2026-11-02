@@ -1,6 +1,7 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.dto;
 
 import java.nio.charset.StandardCharsets;
@@ -65,8 +66,9 @@ public class CaDto {
         dto.revocationInfo = new LinkedHashMap<>();
         dto.revocationInfo.put("reason", rev.getReason().getDescription());
         dto.revocationInfo.put("revocationTime", rev.getRevocationTime().toString());
-        if (rev.getInvalidityTime() != null)
+        if (rev.getInvalidityTime() != null) {
           dto.revocationInfo.put("invalidityTime", rev.getInvalidityTime().toString());
+        }
       }
       if (base.getPermissions() != null) {
         dto.permissions = base.getPermissions().toPermissionTexts();
@@ -92,7 +94,7 @@ public class CaDto {
                 PemEncoder.encode(cert.getEncoded(), PemEncoder.PemLabel.CERTIFICATE),
                 StandardCharsets.UTF_8);
       } catch (Exception e) {
-        // ignore encoding error
+        throw new IllegalStateException("Unable to encode the CA certificate", e);
       }
     }
 

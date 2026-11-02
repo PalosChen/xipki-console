@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
+
 import React, { useCallback, useEffect, useMemo } from 'react'
 import { ConfigProvider } from 'antd'
 import dayjs from 'dayjs'
@@ -9,7 +14,11 @@ import { storedLocale, saveLocale } from './locale'
 void i18n.changeLanguage(storedLocale())
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  return <I18nextProvider i18n={i18n}><LocalizedComponents>{children}</LocalizedComponents></I18nextProvider>
+  return (
+    <I18nextProvider i18n={i18n}>
+      <LocalizedComponents>{children}</LocalizedComponents>
+    </I18nextProvider>
+  )
 }
 
 function LocalizedComponents({ children }: { children: React.ReactNode }) {
@@ -25,10 +34,13 @@ function LocalizedComponents({ children }: { children: React.ReactNode }) {
 export function useI18n() {
   const { i18n: engine } = useTranslation()
   const locale = normalizeLocale(engine.language)
-  const setLocale = useCallback((next: Locale) => {
-    saveLocale(normalizeLocale(next))
-    void engine.changeLanguage(normalizeLocale(next))
-  }, [engine])
+  const setLocale = useCallback(
+    (next: Locale) => {
+      saveLocale(normalizeLocale(next))
+      void engine.changeLanguage(normalizeLocale(next))
+    },
+    [engine],
+  )
   const t = useCallback<Translate>((key, values) => translate(locale, key, values), [locale])
   return useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t])
 }

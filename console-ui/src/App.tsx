@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
+
 import { useI18n } from './i18n'
 import React, { useState, useEffect, useCallback } from 'react'
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom'
@@ -30,11 +35,20 @@ import Roles from './pages/access/Roles'
 import PasswordChange from './pages/access/PasswordChange'
 import MyAccount from './pages/access/MyAccount'
 
-const can = (user: AuthUser, permission: string) => permission.split('|').some(code => user.permissions.includes(code))
+const can = (user: AuthUser, permission: string) =>
+  permission.split('|').some((code) => user.permissions.includes(code))
 
-const Guard: React.FC<{ user: AuthUser; permission: string; children: React.ReactNode }> = ({ user, permission, children }) => {
+const Guard: React.FC<{ user: AuthUser; permission: string; children: React.ReactNode }> = ({
+  user,
+  permission,
+  children,
+}) => {
   const { t } = useI18n()
-  return can(user, permission) ? <>{children}</> : <Result status="403" title={t("Permission denied")} />
+  return can(user, permission) ? (
+    <>{children}</>
+  ) : (
+    <Result status="403" title={t('Permission denied')} />
+  )
 }
 
 const App: React.FC = () => {
@@ -47,64 +61,223 @@ const App: React.FC = () => {
   const checkSession = useCallback(() => {
     setLoading(true)
     setUnavailable(false)
-    return authApi.get('/api/auth/me')
-      .then(res => {
+    return authApi
+      .get('/api/auth/me')
+      .then((res) => {
         if (res.data.success) setUser(res.data.data)
       })
-      .catch(error => {
+      .catch((error) => {
         setUser(null)
         setUnavailable(error.response?.status !== 401)
       })
       .finally(() => setLoading(false))
   }, [])
 
-  useEffect(() => { void checkSession() }, [checkSession])
   useEffect(() => {
-    const requireLogin = () => { setUser(null); setUnavailable(false) }
+    void checkSession()
+  }, [checkSession])
+  useEffect(() => {
+    const requireLogin = () => {
+      setUser(null)
+      setUnavailable(false)
+    }
     window.addEventListener(authenticationRequiredEvent, requireLogin)
     return () => window.removeEventListener(authenticationRequiredEvent, requireLogin)
   }, [])
 
   if (loading) return <Spin fullscreen tip={t('Connecting to management service…')} />
-  if (unavailable) return <><ApplicationHeader /><Result status="error" title={t('Management service unavailable')}
-    subTitle={t('Check that the service and database are ready, then retry.')}
-    extra={<Button onClick={() => void checkSession()}>{t('Retry connection')}</Button>} /></>
+  if (unavailable)
+    return (
+      <>
+        <ApplicationHeader />
+        <Result
+          status="error"
+          title={t('Management service unavailable')}
+          subTitle={t('Check that the service and database are ready, then retry.')}
+          extra={<Button onClick={() => void checkSession()}>{t('Retry connection')}</Button>}
+        />
+      </>
+    )
 
   if (!user) {
     return (
-      <Login onSuccess={next => { setUser(next); navigate(landingPath(next), { replace: true }) }} />
+      <Login
+        onSuccess={(next) => {
+          setUser(next)
+          navigate(landingPath(next), { replace: true })
+        }}
+      />
     )
   }
 
   return (
     <AuthContext.Provider value={user}>
       <MainLayout user={user} onLogout={() => setUser(null)}>
-        {user.passwordChangeRequired ? <PasswordChange /> : <Routes>
-          <Route path="/" element={<Navigate to={landingPath(user)} replace />} />
-          <Route path="/dashboard" element={<Guard user={user} permission={navigationPermission('/dashboard')}><Dashboard /></Guard>} />
-          <Route path="/ca" element={<Guard user={user} permission={navigationPermission('/ca')}><CaList /></Guard>} />
-          <Route path="/ca/operations/enrollments" element={<Guard user={user} permission="CA_IMPORT|CA_ISSUE_SUBCA"><CaEnrollmentRecords /></Guard>} />
-          <Route path="/ca/:name" element={<Guard user={user} permission="CA_READ"><CaDetail /></Guard>} />
-          <Route path="/cert" element={<Guard user={user} permission={navigationPermission('/cert')}><CertList /></Guard>} />
-          <Route path="/cert/enroll" element={<Guard user={user} permission={navigationPermission('/cert/enroll')}><CertEnroll /></Guard>} />
-          <Route path="/crl" element={<Guard user={user} permission={navigationPermission('/crl')}><CrlManage /></Guard>} />
-          <Route path="/profile" element={<Guard user={user} permission={navigationPermission('/profile')}><ProfileList /></Guard>} />
-          <Route path="/profile/:name" element={<Guard user={user} permission="PROFILE_CONFIG_READ"><ProfileEditor /></Guard>} />
-          <Route path="/signer" element={<Guard user={user} permission={navigationPermission('/signer')}><SignerList /></Guard>} />
-          <Route path="/requestor" element={<Guard user={user} permission={navigationPermission('/requestor')}><RequestorList /></Guard>} />
-          <Route path="/publisher" element={<Guard user={user} permission={navigationPermission('/publisher')}><PublisherList /></Guard>} />
-          <Route path="/keypairgen" element={<Guard user={user} permission={navigationPermission('/keypairgen')}><KeypairGenList /></Guard>} />
-          <Route path="/system" element={<Guard user={user} permission={navigationPermission('/system')}><SystemStatus /></Guard>} />
-          <Route path="/dbschema" element={<Guard user={user} permission={navigationPermission('/dbschema')}><DbSchemaManage /></Guard>} />
-          <Route path="/audit" element={<Guard user={user} permission={navigationPermission('/audit')}><AuditList /></Guard>} />
-          <Route path="/access/users" element={<Guard user={user} permission={navigationPermission('/access/users')}><Users /></Guard>} />
-          <Route path="/access/roles" element={<Guard user={user} permission={navigationPermission('/access/roles')}><Roles /></Guard>} />
-          <Route path="/account/password" element={<PasswordChange />} />
-          <Route path="/account" element={<MyAccount onDisplayNameSaved={displayName => {
-            setUser(current => current?.id === user.id ? { ...current, displayName } : current)
-          }} />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>}
+        {user.passwordChangeRequired ? (
+          <PasswordChange />
+        ) : (
+          <Routes>
+            <Route path="/" element={<Navigate to={landingPath(user)} replace />} />
+            <Route
+              path="/dashboard"
+              element={
+                <Guard user={user} permission={navigationPermission('/dashboard')}>
+                  <Dashboard />
+                </Guard>
+              }
+            />
+            <Route
+              path="/ca"
+              element={
+                <Guard user={user} permission={navigationPermission('/ca')}>
+                  <CaList />
+                </Guard>
+              }
+            />
+            <Route
+              path="/ca/operations/enrollments"
+              element={
+                <Guard user={user} permission="CA_IMPORT|CA_ISSUE_SUBCA">
+                  <CaEnrollmentRecords />
+                </Guard>
+              }
+            />
+            <Route
+              path="/ca/:name"
+              element={
+                <Guard user={user} permission="CA_READ">
+                  <CaDetail />
+                </Guard>
+              }
+            />
+            <Route
+              path="/cert"
+              element={
+                <Guard user={user} permission={navigationPermission('/cert')}>
+                  <CertList />
+                </Guard>
+              }
+            />
+            <Route
+              path="/cert/enroll"
+              element={
+                <Guard user={user} permission={navigationPermission('/cert/enroll')}>
+                  <CertEnroll />
+                </Guard>
+              }
+            />
+            <Route
+              path="/crl"
+              element={
+                <Guard user={user} permission={navigationPermission('/crl')}>
+                  <CrlManage />
+                </Guard>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <Guard user={user} permission={navigationPermission('/profile')}>
+                  <ProfileList />
+                </Guard>
+              }
+            />
+            <Route
+              path="/profile/:name"
+              element={
+                <Guard user={user} permission="PROFILE_CONFIG_READ">
+                  <ProfileEditor />
+                </Guard>
+              }
+            />
+            <Route
+              path="/signer"
+              element={
+                <Guard user={user} permission={navigationPermission('/signer')}>
+                  <SignerList />
+                </Guard>
+              }
+            />
+            <Route
+              path="/requestor"
+              element={
+                <Guard user={user} permission={navigationPermission('/requestor')}>
+                  <RequestorList />
+                </Guard>
+              }
+            />
+            <Route
+              path="/publisher"
+              element={
+                <Guard user={user} permission={navigationPermission('/publisher')}>
+                  <PublisherList />
+                </Guard>
+              }
+            />
+            <Route
+              path="/keypairgen"
+              element={
+                <Guard user={user} permission={navigationPermission('/keypairgen')}>
+                  <KeypairGenList />
+                </Guard>
+              }
+            />
+            <Route
+              path="/system"
+              element={
+                <Guard user={user} permission={navigationPermission('/system')}>
+                  <SystemStatus />
+                </Guard>
+              }
+            />
+            <Route
+              path="/dbschema"
+              element={
+                <Guard user={user} permission={navigationPermission('/dbschema')}>
+                  <DbSchemaManage />
+                </Guard>
+              }
+            />
+            <Route
+              path="/audit"
+              element={
+                <Guard user={user} permission={navigationPermission('/audit')}>
+                  <AuditList />
+                </Guard>
+              }
+            />
+            <Route
+              path="/access/users"
+              element={
+                <Guard user={user} permission={navigationPermission('/access/users')}>
+                  <Users />
+                </Guard>
+              }
+            />
+            <Route
+              path="/access/roles"
+              element={
+                <Guard user={user} permission={navigationPermission('/access/roles')}>
+                  <Roles />
+                </Guard>
+              }
+            />
+            <Route path="/account/password" element={<PasswordChange />} />
+            <Route
+              path="/account"
+              element={
+                <MyAccount
+                  onDisplayNameSaved={(displayName) => {
+                    setUser((current) =>
+                      current?.id === user.id ? { ...current, displayName } : current,
+                    )
+                  }}
+                />
+              }
+            />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        )}
       </MainLayout>
     </AuthContext.Provider>
   )

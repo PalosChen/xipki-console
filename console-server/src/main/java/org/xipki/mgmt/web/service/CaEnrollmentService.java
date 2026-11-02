@@ -1,6 +1,7 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.service;
 
 import static org.xipki.mgmt.web.service.CaEnrollmentRepository.*;
@@ -12,6 +13,7 @@ import java.time.Instant;
 import java.util.*;
 import javax.security.auth.x500.X500Principal;
 import org.xipki.codec.ConfPairs;
+import org.xipki.mgmt.web.ca.CaDomain;
 import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.Crypto;
 import org.xipki.mgmt.web.ca.Crypto.*;
@@ -54,7 +56,9 @@ public class CaEnrollmentService {
   }
 
   public static void requireState(Status actual, Status... allowed) {
-    if (!Arrays.asList(allowed).contains(actual)) throw conflict();
+    if (!Arrays.asList(allowed).contains(actual)) {
+      throw conflict();
+    }
   }
 
   private void authorize(Operation op, boolean mutation) throws CaMgmtException {
@@ -65,18 +69,24 @@ public class CaEnrollmentService {
                   b ->
                       b.scope().equals("PLATFORM")
                           && b.definition().active()
-                          && b.definition().permissions().contains("CA_IMPORT")))
+                          && b.definition().permissions().contains("CA_IMPORT"))) {
         throw new AccessDeniedException("Enrollment management is not permitted");
-      if (mutation) access.requireGlobal("CA_IMPORT");
+      }
+      if (mutation) {
+        access.requireGlobal("CA_IMPORT");
+      }
     }
     if (op.data().parentCa != null) {
       // Recovery consumes an existing certificate; parent runtime/profile availability
       // is a precondition for new issuance, not a substitute for scoped authorization.
       var identity = access.require("CA_ISSUE_SUBCA", op.data().parentCa, op.data().profile);
-      if (!identity.fingerprint().equals(op.data().parentFingerprint))
+      if (!identity.fingerprint().equals(op.data().parentFingerprint)) {
         throw new AccessDeniedException("Parent CA changed");
+      }
     }
-    if (mutation) RecentAuthentication.require();
+    if (mutation) {
+      RecentAuthentication.require();
+    }
   }
 
   public Operation get(String id) throws CaMgmtException {
@@ -102,25 +112,32 @@ public class CaEnrollmentService {
   private Operation action(String id, Long version) throws CaMgmtException {
     var op = repository.get(id);
     authorize(op, true);
-    if (version == null || version != op.version()) throw conflict();
+    if (version == null || version != op.version()) {
+      throw conflict();
+    }
     return op;
   }
 
   public Operation prepare(CaEnrollmentDtos.Prepare r) throws Exception {
-    if (r.idempotencyKey == null || !r.idempotencyKey.matches("[a-zA-Z0-9_.-]{8,128}"))
+    if (r.idempotencyKey == null || !r.idempotencyKey.matches("[a-zA-Z0-9_.-]{8,128}")) {
       throw new IllegalArgumentException("Idempotency key required");
+    }
     if (!Set.of("SIGN_ONLY", "REGISTER_CA").contains(Objects.toString(r.purpose, ""))
-        || !Set.of("ONLINE", "EXTERNAL").contains(Objects.toString(r.mode, "")))
+        || !Set.of("ONLINE", "EXTERNAL").contains(Objects.toString(r.mode, ""))) {
       throw new IllegalArgumentException("Invalid enrollment purpose or mode");
+    }
     RecentAuthentication.require();
-    if (r.purpose.equals("REGISTER_CA")) access.requireGlobal("CA_IMPORT");
+    if (r.purpose.equals("REGISTER_CA")) {
+      access.requireGlobal("CA_IMPORT");
+    }
     if (r.purpose.equals("SIGN_ONLY")
         && (!r.mode.equals("ONLINE")
             || r.csr == null
             || r.key != null
             || r.config != null
-            || r.name != null))
+            || r.name != null)) {
       throw new IllegalArgumentException("Sign-only requires an external CSR and a local parent");
+    }
     var d = new Data();
     d.mode = r.mode;
     d.stage = "PREPARE";
@@ -131,14 +148,18 @@ public class CaEnrollmentService {
       d.profile = grant.profile();
       d.profileHash = profileHash(d.profile);
       parent(d);
-    } else if (r.parentCa != null || r.profile != null)
+    } else if (r.parentCa != null || r.profile != null) {
       throw new IllegalArgumentException("External enrollment has no local issuing parent");
+    }
     if (r.purpose.equals("REGISTER_CA")) {
       d.name = CaConfigurationMapper.name(r.name);
-      if (engine.getCaManager().getCaNames().contains(d.name)) throw conflict();
+      if (engine.getCaManager().getCaNames().contains(d.name)) {
+        throw conflict();
+      }
       d.config = r.config;
-      if (d.config != null && d.config.status != null && !d.config.status.equals("inactive"))
+      if (d.config != null && d.config.status != null && !d.config.status.equals("inactive")) {
         throw new IllegalArgumentException("New CA must be inactive");
+      }
       new CaConfigurationMapper()
           .create(
               "PKCS12", d.config,
@@ -158,7 +179,9 @@ public class CaEnrollmentService {
     String id = UUID.randomUUID().toString();
     CaKeyMaterialService.Material material = null;
     if (r.purpose.equals("REGISTER_CA")) {
-      if (r.key == null || !"pkcs11".equals(r.key.mode)) keys.requireAvailable();
+      if (r.key == null || !"pkcs11".equals(r.key.mode)) {
+        keys.requireAvailable();
+      }
       material = materials.prepare(r.key, null, true);
       d.keyType = material.type();
       if (material.type().equals("PKCS11")) {
@@ -169,10 +192,12 @@ public class CaEnrollmentService {
         d.signatureAlgorithm = r.key.signatureAlgorithm;
       }
     }
-    if (r.csr != null) d.csr = Base64.getEncoder().encodeToString(csr(r.csr).getEncoded());
-    else {
-      if (material == null || !material.type().equals("PKCS12") || r.subject == null)
+    if (r.csr != null) {
+      d.csr = Base64.getEncoder().encodeToString(csr(r.csr).getEncoded());
+    } else {
+      if (material == null || !material.type().equals("PKCS12") || r.subject == null) {
         throw new IllegalArgumentException("CSR and external HSM key reference required");
+      }
       var pairs = new ConfPairs(material.conf());
       var store = store(pairs);
       var password = pairs.value("password").toCharArray();
@@ -197,8 +222,9 @@ public class CaEnrollmentService {
       var allowed =
           new ProfileCapabilitiesService(engine.getCaManager()).describe(d.profile).keyAlgorithms();
       var spec = Crypto.keySpec(request.getSubjectPublicKeyInfo());
-      if (!allowed.isEmpty() && (spec == null || !allowed.contains(spec)))
+      if (!allowed.isEmpty() && (spec == null || !allowed.contains(spec))) {
         throw new IllegalArgumentException("CSR key algorithm is not allowed by the profile");
+      }
     }
     d.csrFingerprint = AccessControl.fingerprint(request.getEncoded());
     d.subjectKeyFingerprint =
@@ -207,10 +233,13 @@ public class CaEnrollmentService {
       var pairs = new ConfPairs(material.conf());
       if (!Arrays.equals(
           store(pairs).getCertificate("main").getPublicKey().getEncoded(),
-          request.getSubjectPublicKeyInfo().getEncoded()))
+          request.getSubjectPublicKeyInfo().getEncoded())) {
         throw new IllegalArgumentException("CSR does not match hosted key");
+      }
     }
-    if (material != null && material.type().equals("PKCS12")) keys.put(id, material.conf());
+    if (material != null && material.type().equals("PKCS12")) {
+      keys.put(id, material.conf());
+    }
     try {
       return repository.create(
           id,
@@ -224,7 +253,9 @@ public class CaEnrollmentService {
       // Concurrent duplicate preparation may leave an encrypted orphan; never overwrite another
       // operation's key.
       existing = repository.idempotent(owner, r.idempotencyKey, hash);
-      if (existing != null) return existing;
+      if (existing != null) {
+        return existing;
+      }
       throw ex;
     }
   }
@@ -249,7 +280,9 @@ public class CaEnrollmentService {
 
   private String profileHash(String profile) throws CaMgmtException {
     var entry = engine.getCaManager().getCertprofile(profile);
-    if (entry == null) throw new IllegalArgumentException("Profile unavailable");
+    if (entry == null) {
+      throw new IllegalArgumentException("Profile unavailable");
+    }
     return AccessControl.fingerprint(
         (entry.getType() + "\n" + entry.getConf()).getBytes(StandardCharsets.UTF_8));
   }
@@ -257,10 +290,11 @@ public class CaEnrollmentService {
   private CaEntry parent(Data d) throws CaMgmtException {
     var entry = configuration.required(d.parentCa);
     if (!d.parentFingerprint.equals(CaCertificateValidationService.fingerprint(entry.getCert()))
-        || entry.getBase().getStatus() != org.xipki.mgmt.web.ca.CaDomain.CaStatus.active
+        || entry.getBase().getStatus() != CaDomain.CaStatus.active
         || entry.getBase().getRevocationInfo() != null
-        || !engine.getCaManager().getSuccessfulCaNames().contains(d.parentCa))
+        || !engine.getCaManager().getSuccessfulCaNames().contains(d.parentCa)) {
       throw new IllegalArgumentException("Parent CA is unavailable or changed");
+    }
     var check =
         certificates.validate(
             entry.getCert(),
@@ -268,18 +302,22 @@ public class CaEnrollmentService {
             Optional.empty(),
             Instant.now(),
             CaCertificateValidationService.ValidationPurpose.ACTIVATE);
-    if (!check.valid()) throw new IllegalArgumentException(check.diagnostic());
+    if (!check.valid()) {
+      throw new IllegalArgumentException(check.diagnostic());
+    }
     var capability = new ProfileCapabilitiesService(engine.getCaManager()).describe(d.profile);
-    if (!capability.supportsSubCa())
+    if (!capability.supportsSubCa()) {
       throw new IllegalArgumentException("Parent path length does not permit this SubCA profile");
+    }
     for (int i = 0; i < check.chain().size(); i++) {
       long below =
           check.chain().subList(0, i).stream()
               .filter(c -> !c.getSubject().equals(c.getIssuer()))
               .count();
-      if (below + 1 > check.chain().get(i).getBasicConstraints())
+      if (below + 1 > check.chain().get(i).getBasicConstraints()) {
         throw new IllegalArgumentException(
             "Ancestor CA path length does not permit another intermediate CA");
+      }
     }
     configuration.requireNotKnownRevoked(check.chain());
     return entry;
@@ -295,10 +333,14 @@ public class CaEnrollmentService {
     var op = action(id, version);
     requireState(op.status(), Status.PREPARED);
     var d = op.data();
-    if (!d.mode.equals("ONLINE")) throw conflict();
+    if (!d.mode.equals("ONLINE")) {
+      throw conflict();
+    }
     access.requireSubCaIssue(d.parentCa, d.profile);
     var issuer = parent(d);
-    if (!profileHash(d.profile).equals(d.profileHash)) throw conflict();
+    if (!profileHash(d.profile).equals(d.profileHash)) {
+      throw conflict();
+    }
     var request = csr(d.csr);
     CaEnrollmentSubjectOrder.requireMatch(
         engine.getCaManager(), d.profile, request.getSubject(), caRdnOrder);
@@ -307,7 +349,9 @@ public class CaEnrollmentService {
         var hosted = store(new ConfPairs(material(op)));
         if (!Arrays.equals(
             hosted.getCertificate("main").getPublicKey().getEncoded(),
-            request.getSubjectPublicKeyInfo().getEncoded())) throw new IllegalStateException();
+            request.getSubjectPublicKeyInfo().getEncoded())) {
+          throw new IllegalStateException();
+        }
       } catch (Exception unavailable) {
         throw new IllegalStateException(
             "Hosted enrollment key is unavailable or does not match CSR");
@@ -318,12 +362,15 @@ public class CaEnrollmentService {
     X509Cert issued;
     Instant notBefore = CaConfigurationService.instant(d.notBefore),
         notAfter = CaConfigurationService.instant(d.notAfter);
-    if (notBefore == null || notBefore.isBefore(issuer.getCert().getNotBefore()))
+    if (notBefore == null || notBefore.isBefore(issuer.getCert().getNotBefore())) {
       notBefore = Instant.now();
-    if (notAfter == null || notAfter.isAfter(issuer.getCert().getNotAfter()))
+    }
+    if (notAfter == null || notAfter.isAfter(issuer.getCert().getNotAfter())) {
       notAfter = issuer.getCert().getNotAfter();
-    if (!notBefore.isBefore(notAfter))
+    }
+    if (!notBefore.isBefore(notAfter)) {
       throw new IllegalArgumentException("Requested validity is outside the parent CA validity");
+    }
     op = repository.move(op, Status.ISSUING, d); // Persist before crossing the network.
     try {
       issued =
@@ -338,7 +385,9 @@ public class CaEnrollmentService {
     try {
       var chain = new ArrayList<X509Cert>();
       chain.add(issuer.getCert());
-      if (issuer.getCertchain() != null) chain.addAll(issuer.getCertchain());
+      if (issuer.getCertchain() != null) {
+        chain.addAll(issuer.getCertchain());
+      }
       accept(d, issued, chain, Optional.of(issuer.getCert()));
       return repository.move(op, Status.CERTIFICATE_READY, d);
     } catch (Exception ex) {
@@ -356,8 +405,9 @@ public class CaEnrollmentService {
     if (!Arrays.equals(
             request.getSubjectPublicKeyInfo().getEncoded(),
             cert.getSubjectPublicKeyInfo().getEncoded())
-        || !request.getSubject().equals(cert.getSubject()))
+        || !request.getSubject().equals(cert.getSubject())) {
       throw new IllegalArgumentException("Certificate does not match CSR");
+    }
     var check =
         certificates.validate(
             cert,
@@ -365,8 +415,9 @@ public class CaEnrollmentService {
             expectedParent,
             Instant.now(),
             CaCertificateValidationService.ValidationPurpose.IMPORT);
-    if (!check.valid() || check.selfSigned())
+    if (!check.valid() || check.selfSigned()) {
       throw new IllegalArgumentException("A valid intermediate CA chain is required");
+    }
     configuration.requireNotKnownRevoked(check.chain());
     d.certificate = Base64.getEncoder().encodeToString(cert.getEncoded());
     d.issuedSubject = cert.getSubject().toString();
@@ -385,9 +436,10 @@ public class CaEnrollmentService {
     var op = action(id, r.version);
     requireState(op.status(), Status.AWAITING_CERTIFICATE, Status.RESULT_UNKNOWN);
     var d = op.data();
-    if (!Boolean.TRUE.equals(r.acceptUnknownRevocation))
+    if (!Boolean.TRUE.equals(r.acceptUnknownRevocation)) {
       throw new IllegalArgumentException(
           "Explicit acceptance of externally unverified revocation status is required");
+    }
     var expected =
         d.parentCa == null
             ? Optional.<X509Cert>empty()
@@ -404,11 +456,14 @@ public class CaEnrollmentService {
 
   public Operation register(String id, Long version) throws Exception {
     var op = action(id, version);
-    if (!op.purpose().equals("REGISTER_CA"))
+    if (!op.purpose().equals("REGISTER_CA")) {
       throw new AccessDeniedException("Sign-only operations cannot register a CA");
+    }
     requireState(op.status(), Status.CERTIFICATE_READY, Status.FAILED);
     var d = op.data();
-    if (d.certificate == null) throw conflict();
+    if (d.certificate == null) {
+      throw conflict();
+    }
     var cert = CaKeyMaterialService.certificate(d.certificate);
     var chain = CaKeyMaterialService.certificates(d.certificateChain);
     var check =
@@ -418,18 +473,24 @@ public class CaEnrollmentService {
             Optional.empty(),
             Instant.now(),
             CaCertificateValidationService.ValidationPurpose.IMPORT);
-    if (!check.valid()) throw new IllegalArgumentException(check.diagnostic());
+    if (!check.valid()) {
+      throw new IllegalArgumentException(check.diagnostic());
+    }
     configuration.requireNotKnownRevoked(check.chain());
     var material = material(op);
-    if ("PKCS12".equals(d.keyType)) material = materials.complete(material, cert, chain).conf();
+    if ("PKCS12".equals(d.keyType)) {
+      material = materials.complete(material, cert, chain).conf();
+    }
     var entry =
         new CaEntry(
             new CaConfigurationMapper().create(d.keyType, d.config, null),
-            new org.xipki.mgmt.web.ca.CaDomain.NameId(null, d.name),
+            new CaDomain.NameId(null, d.name),
             material);
     entry.setCert(cert);
     entry.setCertchain(chain);
-    if (engine.getCaManager().getCaNames().contains(d.name)) throw conflict();
+    if (engine.getCaManager().getCaNames().contains(d.name)) {
+      throw conflict();
+    }
     d.stage = "REGISTER";
     d.diagnostic = null;
     op = repository.move(op, Status.REGISTERING, d);
@@ -449,12 +510,17 @@ public class CaEnrollmentService {
             CaCertificateValidationService.fingerprint(current.getCert()),
             CaCertificateValidationService.fingerprint(
                 CaKeyMaterialService.certificate(d.certificate)))
-        || !Objects.equals(current.getBase().getSignerType(), d.keyType)) throw conflict();
+        || !Objects.equals(current.getBase().getSignerType(), d.keyType)) {
+      throw conflict();
+    }
     if ("PKCS11".equals(d.keyType)) {
       var expected = new ConfPairs(material(op));
       var actual = new ConfPairs(current.getSignerConf());
-      for (String field : List.of("module", "slot", "key-id", "key-label"))
-        if (!Objects.equals(expected.value(field), actual.value(field))) throw conflict();
+      for (String field : List.of("module", "slot", "key-id", "key-label")) {
+        if (!Objects.equals(expected.value(field), actual.value(field))) {
+          throw conflict();
+        }
+      }
     }
     d.diagnostic = null;
     var registered = repository.move(op, Status.REGISTERED, d);
@@ -476,7 +542,9 @@ public class CaEnrollmentService {
         if (!CaCertificateValidationService.fingerprint(current.getCert())
             .equals(
                 CaCertificateValidationService.fingerprint(
-                    CaKeyMaterialService.certificate(d.certificate)))) throw conflict();
+                    CaKeyMaterialService.certificate(d.certificate)))) {
+          throw conflict();
+        }
         return confirmRegistration(op);
       }
       if (confirmRegistrationNotCompleted && op.status() == Status.RESULT_UNKNOWN) {
@@ -488,17 +556,20 @@ public class CaEnrollmentService {
       // automatically.
       d.diagnostic =
           "CA not found yet; verify the engine completed the request before retrying registration";
-    } else
+    } else {
       d.diagnostic =
           "Upload the certificate located in the parent CA issuance records; do not resubmit this"
               + " CSR";
+    }
     return repository.move(op, Status.RESULT_UNKNOWN, d);
   }
 
   public Operation cancel(String id, Long version) throws Exception {
     var op = action(id, version);
     requireState(op.status(), Status.PREPARED, Status.AWAITING_CERTIFICATE, Status.FAILED);
-    if (op.data().certificate != null) throw conflict();
+    if (op.data().certificate != null) {
+      throw conflict();
+    }
     op.data().diagnostic = "Cancelled before issuance";
     var cancelled = repository.move(op, Status.CANCELLED, op.data());
     if ("PKCS12".equals(op.data().keyType) && !keys.remove(op.operationId())) {
@@ -509,7 +580,9 @@ public class CaEnrollmentService {
   }
 
   private String material(Operation op) {
-    if (!"PKCS11".equals(op.data().keyType)) return keys.get(op.operationId());
+    if (!"PKCS11".equals(op.data().keyType)) {
+      return keys.get(op.operationId());
+    }
     var d = op.data();
     var key = new CaKeyRequest();
     key.mode = "pkcs11";
@@ -523,7 +596,9 @@ public class CaEnrollmentService {
 
   public List<Map<String, Object>> options() throws CaMgmtException {
     var result = new ArrayList<Map<String, Object>>();
-    if (!access.has("CA_ISSUE_SUBCA")) return result;
+    if (!access.has("CA_ISSUE_SUBCA")) {
+      return result;
+    }
     for (String name : engine.getCaManager().getCaNames()) {
       var identity = access.identity(name);
       var profiles = new ArrayList<Map<String, Object>>();
@@ -546,9 +621,10 @@ public class CaEnrollmentService {
           profiles.add(item);
         }
       }
-      if (!profiles.isEmpty())
+      if (!profiles.isEmpty()) {
         result.add(
             Map.of("name", name, "fingerprint", identity.fingerprint(), "profiles", profiles));
+      }
     }
     return result;
   }

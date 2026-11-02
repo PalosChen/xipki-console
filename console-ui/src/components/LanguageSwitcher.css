@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 .language-switcher.ant-btn {
   height: 38px;
   padding: 0 12px;
@@ -46,7 +50,14 @@
 }
 
 @media (max-width: 359px) {
-  .language-switcher.ant-btn { width: 40px; min-width: 40px; padding: 0; justify-content: center; }
+  .language-switcher.ant-btn {
+    width: 40px;
+    min-width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
   .language-switcher span[lang],
-  .language-switcher-chevron { display: none; }
+  .language-switcher-chevron {
+    display: none;
+  }
 }

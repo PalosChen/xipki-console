@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -36,6 +40,7 @@ function screen(kind) {
     if(id==='../../api/ca')return {caApi:api}
     if(id==='../../api/entities')return {profileApi:api}
     if(id==='../../components/Reauthentication')return {useReauthentication:()=>({authorize:(_,run)=>confirmations.push(run),dialog:null})}
+    if(id==='../../types/api')return {errorMessage:(_,fallback)=>fallback}
     if(['./CaConfigEditor','./CaAssociations','./CaRevoke'].includes(id))return {default:id}
     throw new Error(`Unexpected dependency ${id}`)
   },exports)

@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { togglePermission } from '../src/pages/access/roles-model.ts'

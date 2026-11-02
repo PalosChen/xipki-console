@@ -49,9 +49,30 @@ if test "$offline" = true; then
 else
   npm ci --no-audit --no-fund
 fi
+npm run format:check
 npm test
 npm run build
 cd "$console_root"
+find console-server/src -type f -name '*.java' -exec awk '
+  FNR == 1 && $0 != "/**" {
+    print FILENAME ":1: expected a multiline copyright header" > "/dev/stderr"
+    invalid = 1
+  }
+  length($0) > 100 {
+    print FILENAME ":" FNR ": exceeds 100 characters" > "/dev/stderr"
+    invalid = 1
+  }
+  END { if (invalid) exit 1 }
+' {} +
+find console-ui/src console-ui/tests -type f \
+  \( -name '*.ts' -o -name '*.tsx' -o -name '*.css' -o -name '*.mjs' \) \
+  -exec awk '
+  FNR == 1 && $0 != "/**" {
+    print FILENAME ":1: expected a multiline copyright header" > "/dev/stderr"
+    invalid = 1
+  }
+  END { if (invalid) exit 1 }
+' {} +
 if test "$offline" = true; then
   mvn -o -f console-server/pom.xml clean package
 else

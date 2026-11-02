@@ -1,10 +1,12 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.service;
 
 import org.xipki.codec.ConfPairs;
 import org.xipki.mgmt.web.ca.CaDomain.*;
+import org.xipki.mgmt.web.ca.Crypto;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.CaConfigurationRequest;
 import org.xipki.pkix.util.conf.Validity;
@@ -16,25 +18,39 @@ import org.xipki.pkix.util.conf.Validity;
  */
 public class CaConfigurationMapper {
   public ChangeCaEntry change(String name, CaConfigurationRequest r) {
-    if (r == null) throw new IllegalArgumentException("Configuration required");
+    if (r == null) {
+      throw new IllegalArgumentException("Configuration required");
+    }
     try {
       ChangeCaEntry c = new ChangeCaEntry(new NameId(null, name(name)));
-      if (r.status != null) c.setStatus(CaStatus.forName(r.status));
-      if (r.maxValidity != null) c.setMaxValidity(validity(r.maxValidity));
-      if (r.validityMode != null) c.setValidityMode(ValidityMode.forName(r.validityMode));
+      if (r.status != null) {
+        c.setStatus(CaStatus.forName(r.status));
+      }
+      if (r.maxValidity != null) {
+        c.setMaxValidity(validity(r.maxValidity));
+      }
+      if (r.validityMode != null) {
+        c.setValidityMode(ValidityMode.forName(r.validityMode));
+      }
       if (r.permissions != null) {
         int bits = new Permissions(r.permissions).getValue();
-        if ((bits & ~PermissionConstants.ALL) != 0)
+        if ((bits & ~PermissionConstants.ALL) != 0) {
           throw new IllegalArgumentException("Unsupported permission bits");
+        }
         c.setPermissions(r.permissions);
       }
-      if (r.serialNoLen != null) c.setSerialNoLen(r.serialNoLen);
-      if (r.numCrls != null && r.numCrls < 0)
+      if (r.serialNoLen != null) {
+        c.setSerialNoLen(r.serialNoLen);
+      }
+      if (r.numCrls != null && r.numCrls < 0) {
         throw new IllegalArgumentException("Invalid CRL retention");
-      if (r.expirationPeriod != null && r.expirationPeriod < 0)
+      }
+      if (r.expirationPeriod != null && r.expirationPeriod < 0) {
         throw new IllegalArgumentException("Invalid expiration period");
-      if (r.keepExpiredCertDays != null && r.keepExpiredCertDays < -1)
+      }
+      if (r.keepExpiredCertDays != null && r.keepExpiredCertDays < -1) {
         throw new IllegalArgumentException("Invalid retention");
+      }
       c.setNumCrls(r.numCrls);
       c.setExpirationPeriod(r.expirationPeriod);
       c.setKeepExpiredCertDays(r.keepExpiredCertDays);
@@ -42,42 +58,51 @@ public class CaConfigurationMapper {
       c.setSaveKeypair(r.saveKeypair);
       c.setKeypairGenNames(r.keypairGenNames);
       c.setCrlSignerName(r.crlSignerName);
-      if (r.crlControl != null && !"NULL".equalsIgnoreCase(r.crlControl))
+      if (r.crlControl != null && !"NULL".equalsIgnoreCase(r.crlControl)) {
         new CrlControl(r.crlControl);
-      if (r.ctlogControl != null && !"NULL".equalsIgnoreCase(r.ctlogControl))
+      }
+      if (r.ctlogControl != null && !"NULL".equalsIgnoreCase(r.ctlogControl)) {
         new CtlogControl(r.ctlogControl);
-      if (r.revokeSuspendedControl != null && !"NULL".equalsIgnoreCase(r.revokeSuspendedControl))
+      }
+      if (r.revokeSuspendedControl != null && !"NULL".equalsIgnoreCase(r.revokeSuspendedControl)) {
         new RevokeSuspendedControl(r.revokeSuspendedControl);
-      if (r.extraControl != null && !"NULL".equalsIgnoreCase(r.extraControl))
+      }
+      if (r.extraControl != null && !"NULL".equalsIgnoreCase(r.extraControl)) {
         new ConfPairs(r.extraControl);
+      }
       c.setCrlControl(r.crlControl);
       c.setCtlogControl(r.ctlogControl);
       c.setRevokeSuspendedControl(r.revokeSuspendedControl);
       c.setExtraControl(r.extraControl);
-      if (r.caUris != null)
+      if (r.caUris != null) {
         c.setCaUris(
             new CaUris(
                 r.caUris.cacertUris, r.caUris.ocspUris, r.caUris.crlUris, r.caUris.deltaCrlUris));
+      }
       if (r.signerType != null || r.signerConf != null || r.key != null) {
-        if (!Boolean.TRUE.equals(r.replaceSigner))
+        if (!Boolean.TRUE.equals(r.replaceSigner)) {
           throw new IllegalArgumentException("Explicit signer replacement required");
-        if (r.key == null || r.signerConf != null || r.signerType != null)
+        }
+        if (r.key == null || r.signerConf != null || r.signerType != null) {
           throw new IllegalArgumentException(
               "Replace signer using uploaded material or structured PKCS11 reference");
+        }
       }
       if (r.encodedCert != null || r.encodedCertchain != null) {
-        if (!Boolean.TRUE.equals(r.replaceCertificates))
+        if (!Boolean.TRUE.equals(r.replaceCertificates)) {
           throw new IllegalArgumentException("Explicit certificate replacement required");
+        }
         if (r.encodedCert != null) {
           var cert = CaKeyMaterialService.certificate(r.encodedCert);
           CaKeyMaterialService.requireCa(cert);
           c.setEncodedCert(cert.getEncoded());
         }
-        if (r.encodedCertchain != null)
+        if (r.encodedCertchain != null) {
           c.setEncodedCertchain(
               CaKeyMaterialService.certificates(r.encodedCertchain).stream()
-                  .map(org.xipki.mgmt.web.ca.Crypto.X509Cert::getEncoded)
+                  .map(Crypto.X509Cert::getEncoded)
                   .toList());
+        }
       }
       return c;
     } catch (IllegalArgumentException ex) {
@@ -93,8 +118,9 @@ public class CaConfigurationMapper {
         || r.signerConf != null
         || r.signerType != null
         || r.encodedCert != null
-        || r.encodedCertchain != null)
+        || r.encodedCertchain != null) {
       throw new IllegalArgumentException("Creation material belongs in dedicated fields");
+    }
     ChangeCaEntry c = change("validation", r);
     try {
       var b =
@@ -104,22 +130,45 @@ public class CaConfigurationMapper {
       b.setStatus(c.getStatus() == null ? CaStatus.inactive : c.getStatus());
       b.setMaxValidity(c.getMaxValidity() == null ? validity("365d") : c.getMaxValidity());
       b.setNextCrlNo(nextCrlNo == null ? 1 : nextCrlNo);
-      if (b.getNextCrlNo() < 1) throw new IllegalArgumentException("CRL number must be positive");
-      if (c.getSerialNoLen() != null) b.setSnSize(c.getSerialNoLen());
-      if (c.getNumCrls() != null) b.setNumCrls(c.getNumCrls());
-      if (c.getExpirationPeriod() != null) b.setExpirationPeriod(c.getExpirationPeriod());
-      if (c.getKeepExpiredCertDays() != null) b.setKeepExpiredCertDays(c.getKeepExpiredCertDays());
-      if (c.getSaveCert() != null) b.setSaveCert(c.getSaveCert());
-      if (c.getSaveKeypair() != null) b.setSaveKeypair(c.getSaveKeypair());
-      if (c.getValidityMode() != null) b.setValidityMode(c.getValidityMode());
+      if (b.getNextCrlNo() < 1) {
+        throw new IllegalArgumentException("CRL number must be positive");
+      }
+      if (c.getSerialNoLen() != null) {
+        b.setSnSize(c.getSerialNoLen());
+      }
+      if (c.getNumCrls() != null) {
+        b.setNumCrls(c.getNumCrls());
+      }
+      if (c.getExpirationPeriod() != null) {
+        b.setExpirationPeriod(c.getExpirationPeriod());
+      }
+      if (c.getKeepExpiredCertDays() != null) {
+        b.setKeepExpiredCertDays(c.getKeepExpiredCertDays());
+      }
+      if (c.getSaveCert() != null) {
+        b.setSaveCert(c.getSaveCert());
+      }
+      if (c.getSaveKeypair() != null) {
+        b.setSaveKeypair(c.getSaveKeypair());
+      }
+      if (c.getValidityMode() != null) {
+        b.setValidityMode(c.getValidityMode());
+      }
       b.setKeypairGenNames(c.getKeypairGenNames());
       b.setCrlSignerName(c.getCrlSignerName());
       b.setCaUris(c.getCaUris());
-      if (c.getCrlControl() != null) b.setCrlControl(new CrlControl(c.getCrlControl()));
-      if (c.getCtlogControl() != null) b.setCtlogControl(new CtlogControl(c.getCtlogControl()));
-      if (c.getRevokeSuspendedControl() != null)
+      if (c.getCrlControl() != null) {
+        b.setCrlControl(new CrlControl(c.getCrlControl()));
+      }
+      if (c.getCtlogControl() != null) {
+        b.setCtlogControl(new CtlogControl(c.getCtlogControl()));
+      }
+      if (c.getRevokeSuspendedControl() != null) {
         b.setRevokeSuspendedControl(new RevokeSuspendedControl(c.getRevokeSuspendedControl()));
-      if (c.getExtraControl() != null) b.setExtraControl(new ConfPairs(c.getExtraControl()));
+      }
+      if (c.getExtraControl() != null) {
+        b.setExtraControl(new ConfPairs(c.getExtraControl()));
+      }
       return b;
     } catch (IllegalArgumentException ex) {
       throw ex;
@@ -159,13 +208,16 @@ public class CaConfigurationMapper {
   }
 
   private static Validity validity(String s) {
-    if (!s.matches("[1-9][0-9]*[ymdh]")) throw new IllegalArgumentException("Invalid validity");
+    if (!s.matches("[1-9][0-9]*[ymdh]")) {
+      throw new IllegalArgumentException("Invalid validity");
+    }
     return Validity.getInstance(s);
   }
 
   public static String name(String value) {
-    if (value == null || !value.matches("[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}"))
+    if (value == null || !value.matches("[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}")) {
       throw new IllegalArgumentException("Invalid resource name");
+    }
     return value.toLowerCase(java.util.Locale.ROOT);
   }
 }

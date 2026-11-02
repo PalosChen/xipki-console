@@ -1,15 +1,28 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.service;
 
+import java.util.Set;
 import org.xipki.mgmt.web.core.*;
 
-import java.util.Set;
+/**
+ * Public, non-secret capabilities needed before a profile can issue a CA certificate.
+ *
+ * @author palos
+ */
+public record ProfileCapabilities(
+    CertLevel level, Integer pathLenConstraint, Set<String> keyAlgorithms, String diagnostic) {
+  public enum CertLevel {
+    ROOT_CA,
+    SUB_CA,
+    END_ENTITY,
+    CROSS,
+    UNKNOWN
+  }
 
-/** Public, non-secret capabilities needed before a profile can issue a CA certificate. */
-public record ProfileCapabilities(CertLevel level, Integer pathLenConstraint, Set<String> keyAlgorithms,
-                                  String diagnostic) {
-    public enum CertLevel { ROOT_CA, SUB_CA, END_ENTITY, CROSS, UNKNOWN }
-
-    public boolean supportsSubCa() {
-        return level == CertLevel.SUB_CA;
-    }
+  public boolean supportsSubCa() {
+    return level == CertLevel.SUB_CA;
+  }
 }

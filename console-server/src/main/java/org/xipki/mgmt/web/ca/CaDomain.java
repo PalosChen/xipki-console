@@ -1,6 +1,7 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.ca;
 
 import java.math.BigInteger;
@@ -93,8 +94,11 @@ public final class CaDomain {
     }
 
     public static CertListOrderBy forValue(String value) {
-      for (var v : values())
-        if (v.text.equalsIgnoreCase(value) || v.name().equalsIgnoreCase(value)) return v;
+      for (var v : values()) {
+        if (v.text.equalsIgnoreCase(value) || v.name().equalsIgnoreCase(value)) {
+          return v;
+        }
+      }
       return null;
     }
   }
@@ -139,15 +143,19 @@ public final class CaDomain {
           bits = 1023;
           break;
         }
-        if ("none".equalsIgnoreCase(n)) continue;
+        if ("none".equalsIgnoreCase(n)) {
+          continue;
+        }
         int i = PermissionConstants.NAMES.indexOf(n.toLowerCase(Locale.ROOT));
-        if (i >= 0) bits |= 1 << i;
-        else
+        if (i >= 0) {
+          bits |= 1 << i;
+        } else {
           try {
             bits |= Integer.parseInt(n);
           } catch (Exception e) {
             throw new IllegalArgumentException("Unknown permission");
           }
+        }
       }
       this.value = bits;
     }
@@ -161,10 +169,15 @@ public final class CaDomain {
     }
 
     public List<String> toPermissionTexts() {
-      if (value == 1023) return List.of("all");
+      if (value == 1023) {
+        return List.of("all");
+      }
       var a = new ArrayList<String>();
-      for (int i = 0; i < 10; i++)
-        if ((value & (1 << i)) != 0) a.add(PermissionConstants.NAMES.get(i));
+      for (int i = 0; i < 10; i++) {
+        if ((value & (1 << i)) != 0) {
+          a.add(PermissionConstants.NAMES.get(i));
+        }
+      }
       return a;
     }
   }
@@ -197,10 +210,13 @@ public final class CaDomain {
     }
 
     public static CrlReason forNameOrText(String text) {
-      for (var r : values())
+      for (var r : values()) {
         if (r.name().equalsIgnoreCase(text)
             || r.description.equalsIgnoreCase(text)
-            || Integer.toString(r.code).equals(text)) return r;
+            || Integer.toString(r.code).equals(text)) {
+          return r;
+        }
+      }
       throw new IllegalArgumentException("Unknown revocation reason");
     }
   }
@@ -244,9 +260,12 @@ public final class CaDomain {
 
   private static boolean flag(ConfPairs pairs, String key, boolean fallback) {
     String value = pairs.value(key);
-    if (value == null) return fallback;
-    if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false"))
+    if (value == null) {
+      return fallback;
+    }
+    if (!value.equalsIgnoreCase("true") && !value.equalsIgnoreCase("false")) {
       throw new IllegalArgumentException("Invalid boolean control: " + key);
+    }
     return Boolean.parseBoolean(value);
   }
 
@@ -261,8 +280,9 @@ public final class CaDomain {
     public CrlControl(String conf) {
       var p = new ConfPairs(conf);
       int hours = number(p, "interval.hours", 24);
-      if (!Set.of(1, 2, 3, 4, 6, 8, 12, 24).contains(hours))
+      if (!Set.of(1, 2, 3, 4, 6, 8, 12, 24).contains(hours)) {
         throw new IllegalArgumentException("Invalid CRL interval hours");
+      }
       int full = number(p, "fullcrl.intervals", 168 / hours),
           delta = number(p, "deltacrl.intervals", 0);
       long fullHours = (long) full * hours, deltaHours = (long) delta * hours;
@@ -270,17 +290,22 @@ public final class CaDomain {
           || delta < 0
           || (delta > 0 && delta >= full)
           || !(fullHours % 24 == 0 || 24 % fullHours == 0)
-          || (delta > 0 && !(deltaHours % 24 == 0 || 24 % deltaHours == 0)))
+          || (delta > 0 && !(deltaHours % 24 == 0 || 24 % deltaHours == 0))) {
         throw new IllegalArgumentException("Invalid full/delta CRL intervals");
+      }
       String time = Objects.requireNonNullElse(p.value("interval.time"), "01:00");
-      if (!time.matches("[0-9]{1,2}:[0-9]{1,2}"))
+      if (!time.matches("[0-9]{1,2}:[0-9]{1,2}")) {
         throw new IllegalArgumentException("Invalid CRL time");
+      }
       String[] parts = time.split(":");
       int hour = Integer.parseInt(parts[0]), minute = Integer.parseInt(parts[1]);
-      if (hour > 23 || minute > 59) throw new IllegalArgumentException("Invalid CRL time");
+      if (hour > 23 || minute > 59) {
+        throw new IllegalArgumentException("Invalid CRL time");
+      }
       String mode = Objects.requireNonNullElse(p.value("invalidity.date"), "optional");
-      if (!Set.of("required", "optional", "forbidden").contains(mode))
+      if (!Set.of("required", "optional", "forbidden").contains(mode)) {
         throw new IllegalArgumentException("Invalid invalidity-date mode");
+      }
       String overlap =
           p.value("overlap.days") != null
               ? number(p, "overlap.days", 1) + "d"
@@ -288,7 +313,9 @@ public final class CaDomain {
                   ? number(p, "overlap.minutes", 1440) + "m"
                   : Objects.requireNonNullElse(p.value("overlap"), "1d");
       var validity = Validity.getInstance(overlap);
-      if (validity.validity() < 1) validity = Validity.getInstance("3d");
+      if (validity.validity() < 1) {
+        validity = Validity.getInstance("3d");
+      }
       this.conf =
           new ConfPairs()
               .putPair("interval.hours", Integer.toString(hours))
@@ -318,8 +345,9 @@ public final class CaDomain {
     public CtlogControl(String conf) {
       var p = new ConfPairs(conf);
       boolean enabled = flag(p, "enabled", false);
-      if (p.value("servers") == null || p.value("servers").isBlank())
+      if (p.value("servers") == null || p.value("servers").isBlank()) {
         throw new IllegalArgumentException("CT servers required");
+      }
       p.putPair("enabled", Boolean.toString(enabled));
       this.conf = p.getEncoded();
     }
@@ -521,7 +549,9 @@ public final class CaDomain {
     }
 
     public void setSnSize(int value) {
-      if (value < 1 || value > 20) throw new IllegalArgumentException("Invalid serial length");
+      if (value < 1 || value > 20) {
+        throw new IllegalArgumentException("Invalid serial length");
+      }
       snSize = value;
     }
 
@@ -616,8 +646,9 @@ public final class CaDomain {
     }
 
     public void setSerialNoLen(Integer value) {
-      if (value != null && (value < 1 || value > 20))
+      if (value != null && (value < 1 || value > 20)) {
         throw new IllegalArgumentException("Invalid serial length");
+      }
       serialNoLen = value;
     }
 
@@ -795,8 +826,9 @@ public final class CaDomain {
     public void setCert(X509Cert value) throws CaMgmtException {
       if (value != null) {
         boolean[] usage = value.getKeyUsage();
-        if (value.getBasicConstraints() < 0 || usage == null || usage.length <= 5 || !usage[5])
+        if (value.getBasicConstraints() < 0 || usage == null || usage.length <= 5 || !usage[5]) {
           throw new CaMgmtException("CA certificate with keyCertSign required");
+        }
       }
       cert = value;
     }

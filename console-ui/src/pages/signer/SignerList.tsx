@@ -1,3 +1,8 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
+
 import { useI18n } from '../../i18n'
 import React from 'react'
 import EntityCrudPage from '../../components/EntityCrudPage'

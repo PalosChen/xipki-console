@@ -1,6 +1,7 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -160,8 +161,9 @@ class DomainContractsTest {
                 getClass().getClassLoader(),
                 new Class<?>[] {CaManager.class},
                 (proxy, method, args) -> {
-                  if (!method.getName().equals("getCertprofile"))
+                  if (!method.getName().equals("getCertprofile")) {
                     throw new UnsupportedOperationException();
+                  }
                   String name = (String) args[0];
                   return profiles.containsKey(name)
                       ? new CertprofileEntry(new NameId(null, name), "xijson", profiles.get(name))
@@ -173,8 +175,9 @@ class DomainContractsTest {
     assertEquals(0, sub.pathLenConstraint());
     assertEquals(Set.of("RSA2048"), sub.keyAlgorithms());
     assertEquals(ProfileCapabilities.CertLevel.ROOT_CA, service.describe("root").level());
-    for (var name : List.of("bad", "decimal", "missing"))
+    for (var name : List.of("bad", "decimal", "missing")) {
       assertEquals(ProfileCapabilities.CertLevel.UNKNOWN, service.describe(name).level());
+    }
   }
 
   @Test

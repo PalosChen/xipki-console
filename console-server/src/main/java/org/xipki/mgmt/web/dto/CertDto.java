@@ -1,6 +1,7 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.dto;
 
 import java.nio.charset.StandardCharsets;
@@ -45,7 +46,7 @@ public class CertDto {
               PemEncoder.encode(cert.getEncoded(), PemEncoder.PemLabel.CERTIFICATE),
               StandardCharsets.UTF_8);
     } catch (Exception e) {
-      // ignore
+      throw new IllegalStateException("Unable to encode the certificate", e);
     }
 
     CertRevocationInfo rev = info.getRevInfo();

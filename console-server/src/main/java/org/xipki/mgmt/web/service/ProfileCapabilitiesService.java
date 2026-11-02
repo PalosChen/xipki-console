@@ -1,6 +1,7 @@
-// Copyright (c) 2026 trustasia-com. All rights reserved.
-// License Apache License 2.0
-
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 package org.xipki.mgmt.web.service;
 
 import java.util.LinkedHashSet;
@@ -24,16 +25,22 @@ public class ProfileCapabilitiesService {
   }
 
   public ProfileCapabilities describe(String profileName) {
-    if (profileName == null || profileName.isBlank()) return unknown("Profile name is required");
+    if (profileName == null || profileName.isBlank()) {
+      return unknown("Profile name is required");
+    }
     try {
       CertprofileEntry entry = manager.getCertprofile(profileName);
-      if (entry == null || entry.isFaulty())
+      if (entry == null || entry.isFaulty()) {
         return unknown("Unknown or faulty certificate profile");
-      if (!"xijson".equalsIgnoreCase(entry.getType()))
+      }
+      if (!"xijson".equalsIgnoreCase(entry.getType())) {
         return unknown("Profile type does not expose a supported certificate level");
+      }
       JsonMap root = JsonParser.parseMap(entry.getConf(), false);
       String rawLevel = root.getString("certLevel");
-      if (rawLevel == null) rawLevel = "";
+      if (rawLevel == null) {
+        rawLevel = "";
+      }
       ProfileCapabilities.CertLevel level =
           switch (rawLevel) {
             case "RootCA" -> ProfileCapabilities.CertLevel.ROOT_CA;
@@ -56,13 +63,15 @@ public class ProfileCapabilitiesService {
         Object value = basicConstraints.getObject("pathLen");
         if (!(value instanceof Long || value instanceof Integer)
             || ((Number) value).longValue() < 0
-            || ((Number) value).longValue() > Integer.MAX_VALUE)
+            || ((Number) value).longValue() > Integer.MAX_VALUE) {
           return unknown("Invalid profile path length");
+        }
         pathLen = ((Number) value).intValue();
       }
       Set<String> algorithms = new LinkedHashSet<>();
-      if (root.getList("keyAlgorithms") != null)
+      if (root.getList("keyAlgorithms") != null) {
         algorithms.addAll(root.getList("keyAlgorithms").toStringList());
+      }
       return new ProfileCapabilities(
           level,
           pathLen,

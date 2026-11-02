@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 .login-page {
   min-height: 100vh;
   min-height: 100dvh;
@@ -24,7 +28,9 @@
   border-right: 1px solid #edf1f7;
 }
 
-.login-introduction-content { max-width: 460px; }
+.login-introduction-content {
+  max-width: 460px;
+}
 
 .login-product-icon {
   display: flex;
@@ -49,22 +55,73 @@
   letter-spacing: -0.5px;
 }
 
-.login-introduction .ant-typography { color: #536581; font-size: 17px; line-height: 1.8; }
-.login-form-content { width: 100%; max-width: 420px; }
-.login-form-content h2.ant-typography { margin: 0 0 12px; color: #172b4d; }
-.login-form-description.ant-typography { margin-bottom: 36px; color: #64748b; }
-.login-form-content .ant-input-prefix { margin-inline-end: 10px; color: #94a3b8; }
-.login-form-content .ant-input-affix-wrapper { min-height: 48px; border-radius: 8px; }
-.login-form-content .ant-btn-primary { height: 48px; margin-top: 8px; border-radius: 8px; }
-.login-form-content .ant-form-item:last-child { margin-bottom: 0; }
+.login-introduction .ant-typography {
+  color: #536581;
+  font-size: 17px;
+  line-height: 1.8;
+}
+.login-form-content {
+  width: 100%;
+  max-width: 420px;
+}
+.login-form-content h2.ant-typography {
+  margin: 0 0 12px;
+  color: #172b4d;
+}
+.login-form-description.ant-typography {
+  margin-bottom: 36px;
+  color: #64748b;
+}
+.login-form-content .ant-input-prefix {
+  margin-inline-end: 10px;
+  color: #94a3b8;
+}
+.login-form-content .ant-input-affix-wrapper {
+  min-height: 48px;
+  border-radius: 8px;
+}
+.login-form-content .ant-btn-primary {
+  height: 48px;
+  margin-top: 8px;
+  border-radius: 8px;
+}
+.login-form-content .ant-form-item:last-child {
+  margin-bottom: 0;
+}
 
 @media (max-width: 760px) {
-  .login-main { grid-template-columns: 1fr; align-content: start; }
-  .login-introduction { padding: 32px 24px; border-right: 0; border-bottom: 1px solid #edf1f7; }
-  .login-introduction-content { width: 100%; max-width: 420px; }
-  .login-product-icon { width: 48px; height: 48px; margin-bottom: 16px; border-radius: 14px; font-size: 26px; }
-  .login-introduction h1.ant-typography { font-size: 28px; margin-bottom: 10px; }
-  .login-introduction .ant-typography { font-size: 15px; margin-bottom: 0; }
-  .login-form-section { padding: 36px 24px 48px; }
-  .login-form-description.ant-typography { margin-bottom: 24px; }
+  .login-main {
+    grid-template-columns: 1fr;
+    align-content: start;
+  }
+  .login-introduction {
+    padding: 32px 24px;
+    border-right: 0;
+    border-bottom: 1px solid #edf1f7;
+  }
+  .login-introduction-content {
+    width: 100%;
+    max-width: 420px;
+  }
+  .login-product-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    border-radius: 14px;
+    font-size: 26px;
+  }
+  .login-introduction h1.ant-typography {
+    font-size: 28px;
+    margin-bottom: 10px;
+  }
+  .login-introduction .ant-typography {
+    font-size: 15px;
+    margin-bottom: 0;
+  }
+  .login-form-section {
+    padding: 36px 24px 48px;
+  }
+  .login-form-description.ant-typography {
+    margin-bottom: 24px;
+  }
 }

@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -33,6 +37,7 @@ function formPage(resource, extra={}) {
     if(id==='../auth') return {useCan:()=>()=>true}
     if(id==='./Reauthentication') return {useReauthentication:()=>({authorize:(_,fn)=>fn(),dialog:null})}
     if(id==='../api/entities') return {entityEditPayload:values=>values}
+    if(id==='../types/api') return {errorMessage:(_,fallback)=>fallback}
     if(id==='../api/system') return {systemApi:{supportedTypes(){const r=deferred();requests.push(r);return r.promise}}}
     if(id==='./entity-guidance') {const e={};new Function('exports',compile('../src/components/entity-guidance.ts'))(e);return e}
     throw new Error('Unexpected dependency: '+id)

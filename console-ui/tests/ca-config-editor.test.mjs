@@ -1,3 +1,7 @@
+/**
+ * Copyright (c) 2026 trustasia-com. All rights reserved.
+ * License Apache License 2.0
+ */
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
@@ -62,6 +66,18 @@ function editor() {
     async save() { button('Save configuration')?.props.onClick(); await flush() },
   }
 }
+
+test('CA form keeps ordinary fields out of advanced configuration', async () => {
+  const ui = editor()
+  await ui.load({
+    status: 'inactive', maxValidity: '90d', permissions: ['all'],
+    saveCert: true, saveKeypair: false, serialNoLen: 20,
+    crlControl: 'interval.hours=24',
+  })
+  assert.deepEqual(JSON.parse(ui.form.values.advanced), {
+    crlControl: 'interval.hours=24',
+  })
+})
 
 test('failed initial configuration load prevents a write until explicit retry succeeds', async () => {
   const ui = editor()
