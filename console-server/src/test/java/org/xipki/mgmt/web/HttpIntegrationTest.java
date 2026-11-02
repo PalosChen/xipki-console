@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.*;
 import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
+import org.xipki.mgmt.web.Main.LiteServlet;
 import org.xipki.mgmt.web.audit.*;
 import org.xipki.mgmt.web.controller.*;
 import org.xipki.mgmt.web.core.*;
@@ -102,7 +103,7 @@ class HttpIntegrationTest {
           mutations.incrementAndGet();
           return ApiResponse.ok(Map.of("ca", ca, "size", bytes.length));
         });
-    server = Main.server(0, directory, new Main.LiteServlet(routes, sessions, audit));
+    server = Main.server(0, directory, new LiteServlet(routes, sessions, audit));
     server.start();
     base = "http://127.0.0.1:" + server.getConnector().getLocalPort();
     CookieManager cookies = new CookieManager(null, CookiePolicy.ACCEPT_ALL);

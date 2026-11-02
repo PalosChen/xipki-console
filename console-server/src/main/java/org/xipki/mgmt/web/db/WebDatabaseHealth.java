@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.xipki.mgmt.web.core.*;
+import org.xipki.mgmt.web.core.Jdbc.DataAccessException;
 
 /**
  * @author palos
@@ -60,7 +61,7 @@ public final class WebDatabaseHealth {
                 verify(connection);
                 return true;
               }));
-    } catch (Jdbc.DataAccessException ex) {
+    } catch (DataAccessException ex) {
       return false;
     }
   }

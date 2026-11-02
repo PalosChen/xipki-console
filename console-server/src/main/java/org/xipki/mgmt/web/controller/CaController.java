@@ -18,12 +18,14 @@ import org.xipki.mgmt.web.security.AccountService;
 import org.xipki.mgmt.web.security.CaFieldPermissions;
 import org.xipki.mgmt.web.security.RecentAuthentication;
 import org.xipki.mgmt.web.service.CaCertificateValidationService;
+import org.xipki.mgmt.web.service.CaCertificateValidationService.ValidationPurpose;
 import org.xipki.mgmt.web.service.CaConfigurationMapper;
 import org.xipki.mgmt.web.service.CaConfigurationService;
 import org.xipki.mgmt.web.service.CaEnrollmentRepository;
 import org.xipki.mgmt.web.service.CaKeyMaterialService;
 import org.xipki.mgmt.web.service.CaManagementService;
 import org.xipki.pkix.util.misc.PemEncoder;
+import org.xipki.pkix.util.misc.PemEncoder.PemLabel;
 
 /**
  * CA management controller.
@@ -119,7 +121,7 @@ public class CaController {
                 CaKeyMaterialService.certificates(request.certificateChain),
                 Optional.empty(),
                 Instant.now(),
-                CaCertificateValidationService.ValidationPurpose.IMPORT);
+                ValidationPurpose.IMPORT);
     var result = new LinkedHashMap<String, Object>();
     result.put("valid", check.valid());
     result.put("diagnostic", check.diagnostic());
@@ -184,7 +186,7 @@ public class CaController {
     }
     var output = new ByteArrayOutputStream();
     for (var cert : certs) {
-      output.writeBytes(PemEncoder.encode(cert.getEncoded(), PemEncoder.PemLabel.CERTIFICATE));
+      output.writeBytes(PemEncoder.encode(cert.getEncoded(), PemLabel.CERTIFICATE));
     }
     return Reply.ok()
         .contentType("application/x-pem-file")

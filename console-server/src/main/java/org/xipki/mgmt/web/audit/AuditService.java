@@ -4,6 +4,7 @@
  */
 package org.xipki.mgmt.web.audit;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -57,7 +58,7 @@ public class AuditService {
   public void authorizationChange(
       String action, String resourceType, String resourceId, Object before, Object after) {
     var actor = AccountService.principal();
-    jakarta.servlet.http.HttpServletRequest http = RequestContext.request();
+    HttpServletRequest http = RequestContext.request();
     var details = new LinkedHashMap<String, Object>();
     details.put("before", before);
     details.put("after", after);

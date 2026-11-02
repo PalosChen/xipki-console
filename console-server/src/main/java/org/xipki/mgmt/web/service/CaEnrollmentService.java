@@ -17,8 +17,13 @@ import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.Crypto;
 import org.xipki.mgmt.web.ca.Crypto.*;
 import org.xipki.mgmt.web.core.*;
+import org.xipki.mgmt.web.core.Jdbc.DuplicateKeyException;
 import org.xipki.mgmt.web.dto.*;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Certificate;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Prepare;
 import org.xipki.mgmt.web.security.*;
+import org.xipki.mgmt.web.service.CaCertificateValidationService.ValidationPurpose;
+import org.xipki.mgmt.web.service.CaKeyMaterialService.Material;
 
 /**
  * Durable, explicitly resumed CA enrollment; no automatic replay of remote writes.
@@ -117,7 +122,7 @@ public class CaEnrollmentService {
     return op;
   }
 
-  public Operation prepare(CaEnrollmentDtos.Prepare r) throws Exception {
+  public Operation prepare(Prepare r) throws Exception {
     if (r.idempotencyKey == null || !r.idempotencyKey.matches("[a-zA-Z0-9_.-]{8,128}")) {
       throw new IllegalArgumentException("Idempotency key required");
     }
@@ -176,7 +181,7 @@ public class CaEnrollmentService {
       return existing;
     }
     String id = UUID.randomUUID().toString();
-    CaKeyMaterialService.Material material = null;
+    Material material = null;
     if (r.purpose.equals("REGISTER_CA")) {
       if (r.key == null || !"pkcs11".equals(r.key.mode)) {
         keys.requireAvailable();
@@ -248,7 +253,7 @@ public class CaEnrollmentService {
           r.purpose,
           r.mode.equals("ONLINE") ? Status.PREPARED : Status.AWAITING_CERTIFICATE,
           d);
-    } catch (Jdbc.DuplicateKeyException ex) {
+    } catch (DuplicateKeyException ex) {
       // Concurrent duplicate preparation may leave an encrypted orphan; never overwrite another
       // operation's key.
       existing = repository.idempotent(owner, r.idempotencyKey, hash);
@@ -300,7 +305,7 @@ public class CaEnrollmentService {
             entry.getCertchain(),
             Optional.empty(),
             Instant.now(),
-            CaCertificateValidationService.ValidationPurpose.ACTIVATE);
+            ValidationPurpose.ACTIVATE);
     if (!check.valid()) {
       throw new IllegalArgumentException(check.diagnostic());
     }
@@ -408,12 +413,7 @@ public class CaEnrollmentService {
       throw new IllegalArgumentException("Certificate does not match CSR");
     }
     var check =
-        certificates.validate(
-            cert,
-            chain,
-            expectedParent,
-            Instant.now(),
-            CaCertificateValidationService.ValidationPurpose.IMPORT);
+        certificates.validate(cert, chain, expectedParent, Instant.now(), ValidationPurpose.IMPORT);
     if (!check.valid() || check.selfSigned()) {
       throw new IllegalArgumentException("A valid intermediate CA chain is required");
     }
@@ -431,7 +431,7 @@ public class CaEnrollmentService {
     d.diagnostic = null;
   }
 
-  public Operation receiveCertificate(String id, CaEnrollmentDtos.Certificate r) throws Exception {
+  public Operation receiveCertificate(String id, Certificate r) throws Exception {
     var op = action(id, r.version);
     requireState(op.status(), Status.AWAITING_CERTIFICATE, Status.RESULT_UNKNOWN);
     var d = op.data();
@@ -467,11 +467,7 @@ public class CaEnrollmentService {
     var chain = CaKeyMaterialService.certificates(d.certificateChain);
     var check =
         certificates.validate(
-            cert,
-            chain,
-            Optional.empty(),
-            Instant.now(),
-            CaCertificateValidationService.ValidationPurpose.IMPORT);
+            cert, chain, Optional.empty(), Instant.now(), ValidationPurpose.IMPORT);
     if (!check.valid()) {
       throw new IllegalArgumentException(check.diagnostic());
     }

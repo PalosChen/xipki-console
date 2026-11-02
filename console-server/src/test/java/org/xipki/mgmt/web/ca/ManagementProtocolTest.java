@@ -17,6 +17,7 @@ import javax.security.auth.x500.X500Principal;
 import org.junit.jupiter.api.Test;
 import org.xipki.codec.json.*;
 import org.xipki.mgmt.web.ca.CaDomain.*;
+import org.xipki.mgmt.web.ca.ManagementProtocol.Transport;
 import org.xipki.mgmt.web.service.CaConfigurationMapper;
 
 /**
@@ -25,7 +26,7 @@ import org.xipki.mgmt.web.service.CaConfigurationMapper;
  * @author palos
  */
 class ManagementProtocolTest {
-  private static class Exchange implements ManagementProtocol.Transport {
+  private static class Exchange implements Transport {
     String action;
     JsonMap request;
     String response = "{}";

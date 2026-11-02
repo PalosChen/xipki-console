@@ -11,6 +11,7 @@ import java.time.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import org.xipki.codec.json.*;
+import org.xipki.mgmt.web.core.JsonSyntax.Shape;
 import org.xipki.mgmt.web.security.RoleBinding;
 import org.xipki.mgmt.web.security.WebPrincipal;
 
@@ -22,7 +23,7 @@ import org.xipki.mgmt.web.security.WebPrincipal;
 public final class Json {
   public static <T> T read(String text, Class<T> type) {
     try {
-      JsonSyntax.Shape shape = JsonSyntax.validate(text);
+      Shape shape = JsonSyntax.validate(text);
       Object nativeValue =
           JsonParser.parseMap("{\"value\":" + text + "}", false).getObject("value");
       return type.cast(convert(plain(nativeValue, shape), type));
@@ -55,7 +56,7 @@ public final class Json {
     return write(value).getBytes(StandardCharsets.UTF_8);
   }
 
-  private static Object plain(Object value, JsonSyntax.Shape shape) {
+  private static Object plain(Object value, Shape shape) {
     if (shape.fields() != null) {
       Map<String, Object> result = new LinkedHashMap<>();
       for (var entry : shape.fields().entrySet()) {

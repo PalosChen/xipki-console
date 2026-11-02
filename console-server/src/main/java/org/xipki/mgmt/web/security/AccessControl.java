@@ -13,7 +13,7 @@ import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.CaDto;
 import org.xipki.mgmt.web.service.CaCertificateValidationService;
 import org.xipki.mgmt.web.service.CaManagementService;
-import org.xipki.mgmt.web.service.ProfileCapabilities;
+import org.xipki.mgmt.web.service.ProfileCapabilities.CertLevel;
 import org.xipki.mgmt.web.service.ProfileCapabilitiesService;
 
 /**
@@ -129,14 +129,13 @@ public class AccessControl {
       throw denied();
     }
     var level = new ProfileCapabilitiesService(service.getCaManager()).describe(canonical).level();
-    if (level == ProfileCapabilities.CertLevel.UNKNOWN
-        || level == ProfileCapabilities.CertLevel.ROOT_CA) {
+    if (level == CertLevel.UNKNOWN || level == CertLevel.ROOT_CA) {
       throw denied();
     }
-    if (permission.equals("CERT_CROSS") && level != ProfileCapabilities.CertLevel.CROSS) {
+    if (permission.equals("CERT_CROSS") && level != CertLevel.CROSS) {
       throw denied();
     }
-    if (level == ProfileCapabilities.CertLevel.SUB_CA) {
+    if (level == CertLevel.SUB_CA) {
       if (!has("CA_ISSUE_SUBCA") || !allows("CA_ISSUE_SUBCA", identity, canonical)) {
         throw denied();
       }
@@ -144,7 +143,7 @@ public class AccessControl {
     } else if (permission.equals("CA_ISSUE_SUBCA")) {
       throw denied();
     }
-    if (level == ProfileCapabilities.CertLevel.CROSS && !permission.equals("CERT_CROSS")) {
+    if (level == CertLevel.CROSS && !permission.equals("CERT_CROSS")) {
       throw denied();
     }
     var caEntry = service.getCaManager().getCa(identity.name());
@@ -210,18 +209,16 @@ public class AccessControl {
         continue;
       }
       var level = new ProfileCapabilitiesService(service.getCaManager()).describe(profile).level();
-      if (level == ProfileCapabilities.CertLevel.UNKNOWN
-          || level == ProfileCapabilities.CertLevel.ROOT_CA) {
+      if (level == CertLevel.UNKNOWN || level == CertLevel.ROOT_CA) {
         continue;
       }
-      if (permission.equals("CERT_CROSS") != (level == ProfileCapabilities.CertLevel.CROSS)) {
+      if (permission.equals("CERT_CROSS") != (level == CertLevel.CROSS)) {
         continue;
       }
-      if (level == ProfileCapabilities.CertLevel.SUB_CA
-          && !allows("CA_ISSUE_SUBCA", identity, profile)) {
+      if (level == CertLevel.SUB_CA && !allows("CA_ISSUE_SUBCA", identity, profile)) {
         continue;
       }
-      if (permission.equals("CA_ISSUE_SUBCA") && level != ProfileCapabilities.CertLevel.SUB_CA) {
+      if (permission.equals("CA_ISSUE_SUBCA") && level != CertLevel.SUB_CA) {
         continue;
       }
       result.add(profile);

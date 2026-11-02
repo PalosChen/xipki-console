@@ -13,6 +13,8 @@ import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.Crypto.*;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.*;
+import org.xipki.mgmt.web.service.CaCertificateValidationService.ValidationPurpose;
+import org.xipki.mgmt.web.service.ProfileCapabilities.CertLevel;
 
 /**
  * @author palos
@@ -59,7 +61,7 @@ public class CaConfigurationService {
     new X500Principal(r.subject);
     String profile = CaConfigurationMapper.name(r.profile);
     if (new ProfileCapabilitiesService(service.getCaManager()).describe(profile).level()
-        != ProfileCapabilities.CertLevel.ROOT_CA) {
+        != CertLevel.ROOT_CA) {
       throw new IllegalArgumentException("A supported RootCA profile is required");
     }
     Instant before = instant(r.notBefore), after = instant(r.notAfter);
@@ -91,11 +93,7 @@ public class CaConfigurationService {
     List<X509Cert> chain = CaKeyMaterialService.certificates(r.certificateChain);
     var validation =
         certificates.validate(
-            cert,
-            chain,
-            Optional.empty(),
-            Instant.now(),
-            CaCertificateValidationService.ValidationPurpose.IMPORT);
+            cert, chain, Optional.empty(), Instant.now(), ValidationPurpose.IMPORT);
     if (!validation.valid()) {
       throw new IllegalArgumentException(validation.diagnostic());
     }
@@ -128,7 +126,7 @@ public class CaConfigurationService {
             entry.getCertchain(),
             Optional.empty(),
             Instant.now(),
-            CaCertificateValidationService.ValidationPurpose.IMPORT);
+            ValidationPurpose.IMPORT);
     dto.setChainStatus(
         result.valid()
             ? (result.notYetValid() ? "not-yet-valid" : "verified")
@@ -186,8 +184,8 @@ public class CaConfigurationService {
               Instant.now(),
               "active".equalsIgnoreCase(request.status)
                       || current.getBase().getStatus() == CaStatus.active
-                  ? CaCertificateValidationService.ValidationPurpose.ACTIVATE
-                  : CaCertificateValidationService.ValidationPurpose.IMPORT);
+                  ? ValidationPurpose.ACTIVATE
+                  : ValidationPurpose.IMPORT);
       if (!check.valid() || current.getBase().getRevocationInfo() != null) {
         throw new IllegalArgumentException(
             "CA chain or revocation status does not permit activation/replacement");

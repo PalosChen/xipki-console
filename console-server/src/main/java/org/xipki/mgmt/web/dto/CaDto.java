@@ -11,6 +11,7 @@ import org.xipki.mgmt.web.ca.Crypto.*;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.service.CaCertificateValidationService;
 import org.xipki.pkix.util.misc.PemEncoder;
+import org.xipki.pkix.util.misc.PemEncoder.PemLabel;
 
 /**
  * CA response DTO.
@@ -91,7 +92,7 @@ public class CaDto {
       try {
         dto.certPem =
             new String(
-                PemEncoder.encode(cert.getEncoded(), PemEncoder.PemLabel.CERTIFICATE),
+                PemEncoder.encode(cert.getEncoded(), PemLabel.CERTIFICATE),
                 StandardCharsets.UTF_8);
       } catch (Exception e) {
         throw new IllegalStateException("Unable to encode the CA certificate", e);

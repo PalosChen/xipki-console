@@ -27,6 +27,7 @@ import org.xipki.mgmt.web.service.CaManagementService;
 import org.xipki.mgmt.web.service.CertificateMaterial;
 import org.xipki.mgmt.web.service.ProfileOperationLock;
 import org.xipki.pkix.util.misc.PemEncoder;
+import org.xipki.pkix.util.misc.PemEncoder.PemLabel;
 
 /**
  * Certificate management controller.
@@ -249,7 +250,7 @@ public class CertController {
     dto.setNotAfter(cert.getNotAfter().toString());
     dto.setCertPem(
         new String(
-            PemEncoder.encode(cert.getEncoded(), PemEncoder.PemLabel.CERTIFICATE),
+            PemEncoder.encode(cert.getEncoded(), PemLabel.CERTIFICATE),
             StandardCharsets.UTF_8));
     return dto;
   }
@@ -387,7 +388,7 @@ public class CertController {
     String mediaType;
 
     if ("pem".equalsIgnoreCase(format)) {
-      encoded = PemEncoder.encode(encoded, PemEncoder.PemLabel.CERTIFICATE);
+      encoded = PemEncoder.encode(encoded, PemLabel.CERTIFICATE);
       filename += ".pem";
       mediaType = "text/plain";
     } else {

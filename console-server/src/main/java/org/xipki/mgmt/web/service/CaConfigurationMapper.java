@@ -11,6 +11,7 @@ import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.Crypto.X509Cert;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.CaConfigurationRequest;
+import org.xipki.mgmt.web.dto.CaConfigurationRequest.CaUrisRequest;
 import org.xipki.pkix.util.conf.Validity;
 
 /**
@@ -199,7 +200,7 @@ public class CaConfigurationMapper {
         b.getRevokeSuspendedControl() == null ? null : b.getRevokeSuspendedControl().getConf();
     r.extraControl = b.getExtraControl() == null ? null : b.getExtraControl().getEncoded();
     if (b.getCaUris() != null) {
-      r.caUris = new CaConfigurationRequest.CaUrisRequest();
+      r.caUris = new CaUrisRequest();
       r.caUris.cacertUris = b.getCaUris().getCacertUris();
       r.caUris.ocspUris = b.getCaUris().getOcspUris();
       r.caUris.crlUris = b.getCaUris().getCrlUris();

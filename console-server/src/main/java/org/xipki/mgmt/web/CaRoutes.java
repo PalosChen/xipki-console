@@ -9,6 +9,10 @@ import org.xipki.mgmt.web.audit.AuditTargetCapture;
 import org.xipki.mgmt.web.controller.*;
 import org.xipki.mgmt.web.core.Routes;
 import org.xipki.mgmt.web.dto.*;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Action;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Certificate;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Prepare;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Reconcile;
 import org.xipki.mgmt.web.security.*;
 import org.xipki.mgmt.web.service.*;
 
@@ -72,33 +76,29 @@ public final class CaRoutes {
     routes.add("GET", "/api/ca-enrollments", r -> operations.list());
     routes.add("GET", "/api/ca-enrollments/options", r -> operations.options());
     routes.add(
-        "POST",
-        "/api/ca-enrollments",
-        r -> operations.prepare(r.body(CaEnrollmentDtos.Prepare.class), r.req()));
+        "POST", "/api/ca-enrollments", r -> operations.prepare(r.body(Prepare.class), r.req()));
     routes.add("GET", "/api/ca-enrollments/{id}", r -> operations.get(r.path("id")));
     routes.add("GET", "/api/ca-enrollments/{id}/csr", r -> operations.csr(r.path("id")));
     routes.add(
         "POST",
         "/api/ca-enrollments/{id}/issue",
-        r -> operations.issue(r.path("id"), r.body(CaEnrollmentDtos.Action.class), r.req()));
+        r -> operations.issue(r.path("id"), r.body(Action.class), r.req()));
     routes.add(
         "POST",
         "/api/ca-enrollments/{id}/certificate",
-        r ->
-            operations.certificate(
-                r.path("id"), r.body(CaEnrollmentDtos.Certificate.class), r.req()));
+        r -> operations.certificate(r.path("id"), r.body(Certificate.class), r.req()));
     routes.add(
         "POST",
         "/api/ca-enrollments/{id}/register",
-        r -> operations.register(r.path("id"), r.body(CaEnrollmentDtos.Action.class), r.req()));
+        r -> operations.register(r.path("id"), r.body(Action.class), r.req()));
     routes.add(
         "POST",
         "/api/ca-enrollments/{id}/reconcile",
-        r -> operations.reconcile(r.path("id"), r.body(CaEnrollmentDtos.Reconcile.class), r.req()));
+        r -> operations.reconcile(r.path("id"), r.body(Reconcile.class), r.req()));
     routes.add(
         "POST",
         "/api/ca-enrollments/{id}/cancel",
-        r -> operations.cancel(r.path("id"), r.body(CaEnrollmentDtos.Action.class), r.req()));
+        r -> operations.cancel(r.path("id"), r.body(Action.class), r.req()));
 
     var cert = new CertController(service, access, ownership);
     routes.add(

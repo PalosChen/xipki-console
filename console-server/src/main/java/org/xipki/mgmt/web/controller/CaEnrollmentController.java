@@ -10,6 +10,10 @@ import org.xipki.mgmt.web.audit.AuditFilter;
 import org.xipki.mgmt.web.audit.AuditTargetCapture;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.*;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Action;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Certificate;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Prepare;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Reconcile;
 import org.xipki.mgmt.web.service.CaCertificateValidationService;
 import org.xipki.mgmt.web.service.CaEnrollmentRepository.Operation;
 import org.xipki.mgmt.web.service.CaEnrollmentService;
@@ -35,8 +39,7 @@ public class CaEnrollmentController {
     return ApiResponse.ok(service.options());
   }
 
-  public ApiResponse<Operation> prepare(CaEnrollmentDtos.Prepare body, HttpServletRequest request)
-      throws Exception {
+  public ApiResponse<Operation> prepare(Prepare body, HttpServletRequest request) throws Exception {
     AuditTargetCapture.identify(request, "name", body.name);
     AuditTargetCapture.identify(request, "ca", body.parentCa);
     AuditTargetCapture.identify(request, "profile", body.profile);
@@ -57,26 +60,26 @@ public class CaEnrollmentController {
         .body(Base64.getDecoder().decode(service.get(id).data().csr));
   }
 
-  public ApiResponse<Operation> issue(
-      String id, CaEnrollmentDtos.Action body, HttpServletRequest request) throws Exception {
+  public ApiResponse<Operation> issue(String id, Action body, HttpServletRequest request)
+      throws Exception {
     intent(id, request);
     return outcome(service.issueOnline(id, body.version), request);
   }
 
-  public ApiResponse<Operation> certificate(
-      String id, CaEnrollmentDtos.Certificate body, HttpServletRequest request) throws Exception {
+  public ApiResponse<Operation> certificate(String id, Certificate body, HttpServletRequest request)
+      throws Exception {
     intent(id, request);
     return outcome(service.receiveCertificate(id, body), request);
   }
 
-  public ApiResponse<Operation> register(
-      String id, CaEnrollmentDtos.Action body, HttpServletRequest request) throws Exception {
+  public ApiResponse<Operation> register(String id, Action body, HttpServletRequest request)
+      throws Exception {
     intent(id, request);
     return outcome(service.register(id, body.version), request);
   }
 
-  public ApiResponse<Operation> reconcile(
-      String id, CaEnrollmentDtos.Reconcile body, HttpServletRequest request) throws Exception {
+  public ApiResponse<Operation> reconcile(String id, Reconcile body, HttpServletRequest request)
+      throws Exception {
     intent(id, request);
     return outcome(
         service.reconcile(
@@ -84,8 +87,8 @@ public class CaEnrollmentController {
         request);
   }
 
-  public ApiResponse<Operation> cancel(
-      String id, CaEnrollmentDtos.Action body, HttpServletRequest request) throws Exception {
+  public ApiResponse<Operation> cancel(String id, Action body, HttpServletRequest request)
+      throws Exception {
     intent(id, request);
     return outcome(service.cancel(id, body.version), request);
   }

@@ -11,7 +11,10 @@ import java.util.*;
 import org.xipki.mgmt.web.audit.AuditFilter;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.*;
+import org.xipki.mgmt.web.dto.IdentityRequests.Reauth;
+import org.xipki.mgmt.web.dto.IdentityRequests.Update;
 import org.xipki.mgmt.web.security.*;
+import org.xipki.mgmt.web.security.WebPrincipal.Authority;
 
 /**
  * @author palos
@@ -75,6 +78,7 @@ public final class AuthController {
     return Reply.status(401).body(ApiResponse.error("Invalid credentials"));
   }
 
+  // Password also names the hashing service used by this controller.
   public ApiResponse<Void> password(
       IdentityRequests.Password body, HttpServletRequest req, HttpServletResponse resp) {
     resp.setHeader("Cache-Control", "no-store");
@@ -84,8 +88,7 @@ public final class AuthController {
     return ApiResponse.ok();
   }
 
-  public ApiResponse<Void> reauth(
-      IdentityRequests.Reauth body, HttpServletRequest req, HttpServletResponse resp) {
+  public ApiResponse<Void> reauth(Reauth body, HttpServletRequest req, HttpServletResponse resp) {
     resp.setHeader("Cache-Control", "no-store");
     String key = "reauth:" + AccountService.principal().getUsername();
     throttle.reserve(key, req.getRemoteAddr());
@@ -102,8 +105,7 @@ public final class AuthController {
     return ApiResponse.ok(data);
   }
 
-  public ApiResponse<Map<String, Object>> profile(
-      IdentityRequests.Update body, HttpServletResponse resp) {
+  public ApiResponse<Map<String, Object>> profile(Update body, HttpServletResponse resp) {
     resp.setHeader("Cache-Control", "no-store");
     accounts.updateOwnProfile(body.displayName);
     return ApiResponse.ok(Collections.singletonMap("displayName", body.displayName));
@@ -124,7 +126,7 @@ public final class AuthController {
     data.put(
         "roles",
         user.getAuthorities().stream()
-            .map(WebPrincipal.Authority::getAuthority)
+            .map(Authority::getAuthority)
             .filter(a -> a.startsWith("ROLE_"))
             .map(a -> a.substring(5))
             .distinct()
@@ -133,7 +135,7 @@ public final class AuthController {
     data.put(
         "permissions",
         user.getAuthorities().stream()
-            .map(WebPrincipal.Authority::getAuthority)
+            .map(Authority::getAuthority)
             .filter(a -> a.startsWith("PERM_"))
             .map(a -> a.substring(5))
             .distinct()

@@ -8,6 +8,10 @@ import java.util.*;
 import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.*;
+import org.xipki.mgmt.web.dto.IdentityRequests.Bindings;
+import org.xipki.mgmt.web.dto.IdentityRequests.Create;
+import org.xipki.mgmt.web.dto.IdentityRequests.Status;
+import org.xipki.mgmt.web.dto.IdentityRequests.Update;
 import org.xipki.mgmt.web.security.*;
 import org.xipki.mgmt.web.service.CaManagementService;
 
@@ -33,18 +37,18 @@ public class UserController {
     return ApiResponse.ok(accounts.get(id));
   }
 
-  public Reply<ApiResponse<Map<String, Object>>> create(IdentityRequests.Create body) {
+  public Reply<ApiResponse<Map<String, Object>>> create(Create body) {
     return Reply.ok()
         .header("Cache-Control", "no-store")
         .body(ApiResponse.ok(accounts.create(body.username, body.displayName)));
   }
 
-  public ApiResponse<Void> update(long id, IdentityRequests.Update body) {
+  public ApiResponse<Void> update(long id, Update body) {
     accounts.update(id, body.displayName);
     return ApiResponse.ok();
   }
 
-  public ApiResponse<Void> status(long id, IdentityRequests.Status body) {
+  public ApiResponse<Void> status(long id, Status body) {
     if (body.enabled == null) {
       throw new IllegalArgumentException("Missing status");
     }
@@ -82,8 +86,7 @@ public class UserController {
     return ApiResponse.ok(result);
   }
 
-  public ApiResponse<Void> bindings(long id, IdentityRequests.Bindings body)
-      throws CaMgmtException {
+  public ApiResponse<Void> bindings(long id, Bindings body) throws CaMgmtException {
     if (body.bindings == null || body.bindings.size() > 100) {
       throw new IllegalArgumentException("Invalid bindings");
     }

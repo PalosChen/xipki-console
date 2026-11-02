@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.xipki.mgmt.web.Main.LiteServlet;
 import org.xipki.mgmt.web.ca.CaDomain.CaMgmtException;
 import org.xipki.mgmt.web.core.ApiException;
 import org.xipki.mgmt.web.core.Config;
@@ -25,16 +26,15 @@ class StartupContractTest {
 
   @Test
   void distinguishesCaRejectionFromUncertainTransportOutcome() {
-    assertEquals(400, Main.LiteServlet.error(new CaMgmtException("rejected"), null).status());
+    assertEquals(400, LiteServlet.error(new CaMgmtException("rejected"), null).status());
     assertEquals(
-        503,
-        Main.LiteServlet.error(new CaMgmtException(new IOException("unavailable")), null).status());
+        503, LiteServlet.error(new CaMgmtException(new IOException("unavailable")), null).status());
   }
 
   @Test
   void exposesValidatedSubjectErrorsButHidesUnexpectedArguments() {
     var error =
-        Main.LiteServlet.error(
+        LiteServlet.error(
             new ApiException(400, "CSR subject order does not match the certificate profile"),
             null);
     assertEquals(400, error.status());
@@ -42,7 +42,7 @@ class StartupContractTest {
         Map.of("error", "CSR subject order does not match the certificate profile"), error.body());
     assertEquals(
         Map.of("error", "Invalid request fields or format"),
-        Main.LiteServlet.error(new IllegalArgumentException("secret"), null).body());
+        LiteServlet.error(new IllegalArgumentException("secret"), null).body());
   }
 
   @Test
@@ -89,7 +89,7 @@ class StartupContractTest {
 
   @Test
   void multipartParserHasExplicitPartAndHeaderBudgets() throws Exception {
-    var tomcat = Main.server(0, directory, new Main.LiteServlet(null, null, null));
+    var tomcat = Main.server(0, directory, new LiteServlet(null, null, null));
     try {
       var connector = tomcat.getConnector();
       assertEquals("17", connector.getProperty("maxPartCount"));

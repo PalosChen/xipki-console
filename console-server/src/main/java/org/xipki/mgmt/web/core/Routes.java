@@ -6,6 +6,7 @@ package org.xipki.mgmt.web.core;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLDecoder;
@@ -280,7 +281,7 @@ public final class Routes {
       throw new ApiException(400, "Uploaded file is required");
     }
 
-    private record PartUpload(jakarta.servlet.http.Part part) implements Upload {
+    private record PartUpload(Part part) implements Upload {
       public byte[] getBytes() throws IOException {
         try (var stream = part.getInputStream()) {
           return stream.readAllBytes();

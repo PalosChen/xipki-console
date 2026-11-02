@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.xipki.mgmt.web.audit.AuditService;
 import org.xipki.mgmt.web.core.*;
+import org.xipki.mgmt.web.security.PermissionCatalog.Permission;
 
 /**
  * @author palos
@@ -136,7 +137,7 @@ public class AccountService {
     if (!actor.isSuperAdmin()) {
       String privileged =
           PermissionCatalog.entries().stream()
-              .filter(PermissionCatalog.Permission::privileged)
+              .filter(Permission::privileged)
               .map(p -> "'" + p.code() + "'")
               .collect(Collectors.joining(","));
       sql +=

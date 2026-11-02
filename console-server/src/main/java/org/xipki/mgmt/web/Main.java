@@ -21,6 +21,8 @@ import org.xipki.mgmt.web.ca.CaMgmtClient;
 import org.xipki.mgmt.web.controller.*;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.core.AccessDeniedException;
+import org.xipki.mgmt.web.core.Jdbc.DataAccessException;
+import org.xipki.mgmt.web.core.Jdbc.DuplicateKeyException;
 import org.xipki.mgmt.web.db.*;
 import org.xipki.mgmt.web.security.*;
 import org.xipki.mgmt.web.service.*;
@@ -365,10 +367,10 @@ public final class Main {
       if (ex instanceof ApiException api) {
         status = api.status();
         message = api.getMessage();
-      } else if (ex instanceof Jdbc.DuplicateKeyException) {
+      } else if (ex instanceof DuplicateKeyException) {
         status = 409;
         message = "Resource name already exists";
-      } else if (ex instanceof Jdbc.DataAccessException) {
+      } else if (ex instanceof DataAccessException) {
         status = 503;
         message = "Web database temporarily unavailable";
       } else if (ex instanceof RoleValidationException) {
@@ -394,8 +396,7 @@ public final class Main {
                     ? "CA service temporarily unavailable"
                     : "CA management request failed";
       } else {
-        org.slf4j.LoggerFactory.getLogger(Main.class)
-            .error("Unexpected request error ({})", ex.getClass().getSimpleName());
+        LOG.error("Unexpected request error ({})", ex.getClass().getSimpleName());
       }
       return Reply.status(status)
           .body(Map.of("error", message == null ? "Request failed" : message));

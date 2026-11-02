@@ -9,6 +9,7 @@ import java.util.*;
 import org.xipki.mgmt.web.ca.CaDomain.CrlReason;
 import org.xipki.mgmt.web.core.ApiException;
 import org.xipki.mgmt.web.dto.*;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Prepare;
 import org.xipki.mgmt.web.security.CaFieldPermissions;
 
 /**
@@ -54,7 +55,7 @@ public final class AuditTargetCapture {
   }
 
   public Object captureBody(HttpServletRequest req, Object body) {
-    if (body instanceof CaEnrollmentDtos.Prepare e) {
+    if (body instanceof Prepare e) {
       captureEnrollment(req, null, e.purpose, e.parentCa, e.profile, e.name);
       return body;
     }

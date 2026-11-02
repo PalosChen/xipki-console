@@ -11,7 +11,10 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.xipki.mgmt.web.core.Json;
 import org.xipki.mgmt.web.dto.*;
-import org.xipki.mgmt.web.service.CaEnrollmentRepository;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Action;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Certificate;
+import org.xipki.mgmt.web.dto.CaEnrollmentDtos.Prepare;
+import org.xipki.mgmt.web.service.CaEnrollmentRepository.Data;
 
 /**
  * @author palos
@@ -37,7 +40,7 @@ class EnrollmentJsonCompatibilityTest {
 
   @Test
   void enrollmentHashInputMatchesLegacyJacksonIncludingNullsAndOrder() {
-    var p = new CaEnrollmentDtos.Prepare();
+    var p = new Prepare();
     p.idempotencyKey = "existing-123";
     p.purpose = "REGISTER_CA";
     p.mode = "EXTERNAL";
@@ -63,20 +66,18 @@ class EnrollmentJsonCompatibilityTest {
         Json.read(
             "{\"name\":\"subca\",\"mode\":\"ONLINE\",\"certificateChain\":[\"issuer\"],"
                 + "\"config\":{\"status\":\"inactive\"},\"acceptUnknownRevocation\":true}",
-            CaEnrollmentRepository.Data.class);
+            Data.class);
     assertEquals("subca", data.name);
     assertEquals(List.of("issuer"), data.certificateChain);
     assertEquals("inactive", data.config.status);
     assertTrue(data.acceptUnknownRevocation);
-    var restored = Json.read(Json.write(data), CaEnrollmentRepository.Data.class);
+    var restored = Json.read(Json.write(data), Data.class);
     assertEquals(data.certificateChain, restored.certificateChain);
-    var action =
-        Json.read("{\"version\":7,\"certificate\":\"cert\"}", CaEnrollmentDtos.Certificate.class);
+    var action = Json.read("{\"version\":7,\"certificate\":\"cert\"}", Certificate.class);
     assertEquals(7L, action.version);
     assertEquals("cert", action.certificate);
     assertThrows(
-        IllegalArgumentException.class,
-        () -> Json.read("{\"version\":\"7\"}", CaEnrollmentDtos.Action.class));
+        IllegalArgumentException.class, () -> Json.read("{\"version\":\"7\"}", Action.class));
     assertThrows(
         IllegalArgumentException.class,
         () -> Json.read("{\"signerConfig\":null}", CaConfigurationRequest.class));

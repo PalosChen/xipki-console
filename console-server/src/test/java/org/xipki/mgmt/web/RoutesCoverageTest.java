@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.xipki.mgmt.web.core.Routes;
+import org.xipki.mgmt.web.core.Routes.Endpoint;
 import org.xipki.mgmt.web.security.ManagementApiPolicy;
 import org.xipki.mgmt.web.service.CaManagementService;
 
@@ -26,11 +27,11 @@ class RoutesCoverageTest {
     routes.add("GET", "/health/live", request -> Map.of("status", "UP"));
     routes.add("GET", "/health/ready", request -> Map.of("status", "UP"));
 
-    Set<Routes.Endpoint> actual = new HashSet<>(routes.entries());
-    Set<Routes.Endpoint> expected = new HashSet<>();
+    Set<Endpoint> actual = new HashSet<>(routes.entries());
+    Set<Endpoint> expected = new HashSet<>();
     for (var rule : ManagementApiPolicy.rules()) {
       assertTrue(
-          expected.add(new Routes.Endpoint(rule.method(), rule.path())),
+          expected.add(new Endpoint(rule.method(), rule.path())),
           () -> "Duplicate policy endpoint: " + rule.method() + " " + rule.path());
     }
     assertEquals(routes.entries().size(), actual.size(), "Duplicate route registration");

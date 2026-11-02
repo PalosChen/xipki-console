@@ -10,7 +10,7 @@ import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.ApiResponse;
 import org.xipki.mgmt.web.security.AccessControl;
 import org.xipki.mgmt.web.service.CaManagementService;
-import org.xipki.mgmt.web.service.ProfileCapabilities;
+import org.xipki.mgmt.web.service.ProfileCapabilities.CertLevel;
 import org.xipki.mgmt.web.service.ProfileCapabilitiesService;
 
 /**
@@ -40,7 +40,7 @@ public class CaOptionsController {
       var profiles = new TreeSet<String>();
       var capabilities = new ProfileCapabilitiesService(service.getCaManager());
       for (String name : service.getCaManager().getCertprofileNames()) {
-        if (capabilities.describe(name).level() == ProfileCapabilities.CertLevel.ROOT_CA) {
+        if (capabilities.describe(name).level() == CertLevel.ROOT_CA) {
           profiles.add(name);
         }
       }

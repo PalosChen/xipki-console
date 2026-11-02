@@ -20,6 +20,7 @@ import org.xipki.mgmt.web.ca.CaManager;
 import org.xipki.mgmt.web.core.ApiException;
 import org.xipki.mgmt.web.dto.*;
 import org.xipki.mgmt.web.service.*;
+import org.xipki.mgmt.web.service.ProfileCapabilities.CertLevel;
 
 /**
  * Domain contract tests.
@@ -173,12 +174,12 @@ class DomainContractsTest {
                 });
     var service = new ProfileCapabilitiesService(manager);
     var sub = service.describe("sub");
-    assertEquals(ProfileCapabilities.CertLevel.SUB_CA, sub.level());
+    assertEquals(CertLevel.SUB_CA, sub.level());
     assertEquals(0, sub.pathLenConstraint());
     assertEquals(Set.of("RSA2048"), sub.keyAlgorithms());
-    assertEquals(ProfileCapabilities.CertLevel.ROOT_CA, service.describe("root").level());
+    assertEquals(CertLevel.ROOT_CA, service.describe("root").level());
     for (var name : List.of("bad", "decimal", "missing")) {
-      assertEquals(ProfileCapabilities.CertLevel.UNKNOWN, service.describe(name).level());
+      assertEquals(CertLevel.UNKNOWN, service.describe(name).level());
     }
   }
 

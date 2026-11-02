@@ -11,6 +11,7 @@ import org.xipki.codec.json.JsonParser;
 import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.CaManager;
 import org.xipki.mgmt.web.core.*;
+import org.xipki.mgmt.web.service.ProfileCapabilities.CertLevel;
 
 /**
  * Resolves capabilities from the actual XiPKI profile entry, never from its name.
@@ -41,13 +42,13 @@ public class ProfileCapabilitiesService {
       if (rawLevel == null) {
         rawLevel = "";
       }
-      ProfileCapabilities.CertLevel level =
+      CertLevel level =
           switch (rawLevel) {
-            case "RootCA" -> ProfileCapabilities.CertLevel.ROOT_CA;
-            case "SubCA" -> ProfileCapabilities.CertLevel.SUB_CA;
-            case "EndEntity" -> ProfileCapabilities.CertLevel.END_ENTITY;
-            case "CROSS", "Cross" -> ProfileCapabilities.CertLevel.CROSS;
-            default -> ProfileCapabilities.CertLevel.UNKNOWN;
+            case "RootCA" -> CertLevel.ROOT_CA;
+            case "SubCA" -> CertLevel.SUB_CA;
+            case "EndEntity" -> CertLevel.END_ENTITY;
+            case "CROSS", "Cross" -> CertLevel.CROSS;
+            default -> CertLevel.UNKNOWN;
           };
       JsonMap basicConstraints = root.getMap("basicConstraints");
       if (basicConstraints == null && root.getList("extensions") != null) {
@@ -76,15 +77,13 @@ public class ProfileCapabilitiesService {
           level,
           pathLen,
           Set.copyOf(algorithms),
-          level == ProfileCapabilities.CertLevel.UNKNOWN
-              ? "Unsupported or missing certLevel"
-              : null);
+          level == CertLevel.UNKNOWN ? "Unsupported or missing certLevel" : null);
     } catch (Exception ex) {
       return unknown("Certificate profile configuration is invalid");
     }
   }
 
   private static ProfileCapabilities unknown(String message) {
-    return new ProfileCapabilities(ProfileCapabilities.CertLevel.UNKNOWN, null, Set.of(), message);
+    return new ProfileCapabilities(CertLevel.UNKNOWN, null, Set.of(), message);
   }
 }

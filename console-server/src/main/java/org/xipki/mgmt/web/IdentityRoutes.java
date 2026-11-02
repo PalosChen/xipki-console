@@ -10,6 +10,12 @@ import java.util.*;
 import org.xipki.mgmt.web.controller.*;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.*;
+import org.xipki.mgmt.web.dto.IdentityRequests.Bindings;
+import org.xipki.mgmt.web.dto.IdentityRequests.Create;
+import org.xipki.mgmt.web.dto.IdentityRequests.Password;
+import org.xipki.mgmt.web.dto.IdentityRequests.Reauth;
+import org.xipki.mgmt.web.dto.IdentityRequests.Status;
+import org.xipki.mgmt.web.dto.IdentityRequests.Update;
 import org.xipki.mgmt.web.security.SessionManager;
 
 /**
@@ -61,36 +67,29 @@ public final class IdentityRoutes {
     routes.add(
         "POST",
         "/api/auth/password",
-        r -> auth.password(r.body(IdentityRequests.Password.class), r.req(), r.resp()));
+        r -> auth.password(r.body(Password.class), r.req(), r.resp()));
     routes.add(
-        "POST",
-        "/api/auth/reauth",
-        r -> auth.reauth(r.body(IdentityRequests.Reauth.class), r.req(), r.resp()));
+        "POST", "/api/auth/reauth", r -> auth.reauth(r.body(Reauth.class), r.req(), r.resp()));
     routes.add("POST", "/api/auth/logout", r -> auth.logout(r.req(), r.resp()));
-    routes.add(
-        "PUT",
-        "/api/auth/profile",
-        r -> auth.profile(r.body(IdentityRequests.Update.class), r.resp()));
+    routes.add("PUT", "/api/auth/profile", r -> auth.profile(r.body(Update.class), r.resp()));
     routes.add(
         "GET",
         "/api/users",
         r -> users.list(r.param("search", ""), r.integer("page", 0), r.integer("size", 25)));
     routes.add("GET", "/api/users/{id}", r -> users.get(id(r.path("id"))));
-    routes.add("POST", "/api/users", r -> users.create(r.body(IdentityRequests.Create.class)));
-    routes.add(
-        "PUT",
-        "/api/users/{id}",
-        r -> users.update(id(r.path("id")), r.body(IdentityRequests.Update.class)));
+    routes.add("POST", "/api/users", r -> users.create(r.body(Create.class)));
+    routes.add("PUT", "/api/users/{id}", r -> users.update(id(r.path("id")), r.body(Update.class)));
     routes.add(
         "POST",
         "/api/users/{id}/status",
-        r -> users.status(id(r.path("id")), r.body(IdentityRequests.Status.class)));
+        r -> users.status(id(r.path("id")), r.body(Status.class)));
     routes.add("POST", "/api/users/{id}/reset-password", r -> users.reset(id(r.path("id"))));
     routes.add("POST", "/api/users/{id}/sessions/revoke", r -> users.revoke(id(r.path("id"))));
     routes.add(
         "PUT",
         "/api/users/{id}/role-bindings",
-        r -> users.bindings(id(r.path("id")), r.body(IdentityRequests.Bindings.class)));
+        r -> users.bindings(id(r.path("id")), r.body(Bindings.class)));
+    // RoleRequests also defines Create and Update, so those route types retain their qualifier.
     routes.add("GET", "/api/access-options", r -> users.options());
     routes.add("GET", "/api/roles", r -> roles.list());
     routes.add("GET", "/api/permissions", r -> roles.permissions());

@@ -9,6 +9,7 @@ import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.Crypto.*;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.pkix.util.misc.PemEncoder;
+import org.xipki.pkix.util.misc.PemEncoder.PemLabel;
 
 /**
  * Certificate response DTO.
@@ -43,7 +44,7 @@ public class CertDto {
     try {
       dto.certPem =
           new String(
-              PemEncoder.encode(cert.getEncoded(), PemEncoder.PemLabel.CERTIFICATE),
+              PemEncoder.encode(cert.getEncoded(), PemLabel.CERTIFICATE),
               StandardCharsets.UTF_8);
     } catch (Exception e) {
       throw new IllegalStateException("Unable to encode the certificate", e);

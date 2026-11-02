@@ -13,6 +13,7 @@ import org.junit.jupiter.api.*;
 import org.xipki.mgmt.web.audit.*;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.db.*;
+import org.xipki.mgmt.web.security.AccessControl.CaIdentity;
 
 /**
  * Opt-in, non-destructive verification against an explicitly dedicated disposable database.
@@ -75,7 +76,7 @@ class IdentityDatabaseTest {
   @Test
   void certificateOwnershipCursorVisitsEveryOwnedSerial() {
     administrator();
-    var identity = new AccessControl.CaIdentity("ownership-test", "f".repeat(64));
+    var identity = new CaIdentity("ownership-test", "f".repeat(64));
     long userId = AccountService.principal().id();
     try {
       for (int serial = 1; serial <= 101; serial++) {

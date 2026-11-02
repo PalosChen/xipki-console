@@ -25,6 +25,7 @@ import org.xipki.mgmt.web.ca.Crypto;
 import org.xipki.mgmt.web.ca.ManagementProtocol;
 import org.xipki.mgmt.web.core.ApiException;
 import org.xipki.mgmt.web.security.AccessControl;
+import org.xipki.mgmt.web.security.AccessControl.CaIdentity;
 import org.xipki.mgmt.web.security.CertificateOwnership;
 import org.xipki.mgmt.web.service.CaManagementService;
 
@@ -63,7 +64,7 @@ class CertListValidityTest {
     var ownership =
         new CertificateOwnership(null) {
           @Override
-          public Page page(AccessControl.CaIdentity ca, String cursor) {
+          public Page page(CaIdentity ca, String cursor) {
             return new Page(List.of("1", "2", "3", "4"), null);
           }
         };
@@ -111,7 +112,7 @@ class CertListValidityTest {
     var ownership =
         new CertificateOwnership(null) {
           @Override
-          public Page page(AccessControl.CaIdentity ca, String cursor) {
+          public Page page(CaIdentity ca, String cursor) {
             return new Page(List.of("1"), null);
           }
         };
@@ -159,7 +160,7 @@ class CertListValidityTest {
     var ownership =
         new CertificateOwnership(null) {
           @Override
-          public Page page(AccessControl.CaIdentity ca, String cursor) {
+          public Page page(CaIdentity ca, String cursor) {
             return new Page(List.of("1"), null);
           }
         };
@@ -207,12 +208,12 @@ class CertListValidityTest {
     var ownership =
         new CertificateOwnership(null) {
           @Override
-          public List<String> serials(AccessControl.CaIdentity ca, int limit) {
+          public List<String> serials(CaIdentity ca, int limit) {
             return List.of("1", "2");
           }
 
           @Override
-          public Page page(AccessControl.CaIdentity ca, String cursor) {
+          public Page page(CaIdentity ca, String cursor) {
             return new Page(List.of("1"), "second-page");
           }
         };
@@ -247,7 +248,7 @@ class CertListValidityTest {
     var ownership =
         new CertificateOwnership(null) {
           @Override
-          public List<String> serials(AccessControl.CaIdentity ca, int limit) {
+          public List<String> serials(CaIdentity ca, int limit) {
             return IntStream.rangeClosed(1, 1001).mapToObj(Integer::toHexString).toList();
           }
         };
@@ -299,7 +300,7 @@ class CertListValidityTest {
     var ownership =
         new CertificateOwnership(null) {
           @Override
-          public Page page(AccessControl.CaIdentity ca, String cursor) {
+          public Page page(CaIdentity ca, String cursor) {
             int start = cursor == null ? 1 : Integer.parseInt(cursor) + 1;
             int end = Math.min(start + 49, 1001);
             var serials = IntStream.rangeClosed(start, end).mapToObj(Integer::toHexString).toList();

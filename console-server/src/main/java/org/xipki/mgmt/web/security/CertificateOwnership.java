@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import org.xipki.mgmt.web.core.*;
+import org.xipki.mgmt.web.security.AccessControl.CaIdentity;
 
 /**
  * @author palos
@@ -28,7 +29,7 @@ public class CertificateOwnership {
     this.jdbc = jdbc;
   }
 
-  public void record(AccessControl.CaIdentity ca, String serial, String profile) {
+  public void record(CaIdentity ca, String serial, String profile) {
     jdbc.update(
         "INSERT INTO"
             + " web_certificate_owner(ca_name,ca_fingerprint,serial_number,user_id,profile_name)"
@@ -40,7 +41,7 @@ public class CertificateOwnership {
         profile);
   }
 
-  public boolean owns(AccessControl.CaIdentity ca, String serial) {
+  public boolean owns(CaIdentity ca, String serial) {
     return jdbc.queryForObject(
             "SELECT COUNT(*) FROM web_certificate_owner WHERE ca_name=? AND ca_fingerprint=? AND"
                 + " serial_number=? AND user_id=?",
@@ -52,7 +53,7 @@ public class CertificateOwnership {
         == 1;
   }
 
-  public List<String> serials(AccessControl.CaIdentity ca, int limit) {
+  public List<String> serials(CaIdentity ca, int limit) {
     if (limit < 1 || limit > 1001) {
       throw new IllegalArgumentException("Invalid limit");
     }
@@ -66,7 +67,7 @@ public class CertificateOwnership {
         limit);
   }
 
-  public Page page(AccessControl.CaIdentity ca, String cursor) {
+  public Page page(CaIdentity ca, String cursor) {
     Entry after = decode(cursor);
     String sql =
         "SELECT serial_number,issued_at FROM web_certificate_owner WHERE ca_name=? AND"
