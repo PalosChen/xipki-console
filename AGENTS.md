@@ -73,6 +73,39 @@ These rules apply immediately to new and modified code. Existing violations
 should be removed when the surrounding file or module is changed, without
 creating unrelated repository-wide formatting churn.
 
+## Frontend TypeScript and React rules
+
+Apply these rules to every new or modified file under console-ui/:
+
+- Keep TypeScript strictness enabled. Do not add any, @ts-ignore or
+  @ts-expect-error to bypass type errors. Use a domain type, unknown with
+  narrowing, or a typed API response instead.
+- Keep API calls in the api/ client modules. Components must use typed request
+  and response models and must not duplicate authentication, CSRF, timeout or
+  error-normalization logic.
+- Use function components and hooks consistently. Every effect that creates a
+  timer, listener, request or object URL must clean it up on unmount and
+  invalidate stale asynchronous results.
+- Use stable domain keys for rendered lists. Do not use an array index as a key
+  for mutable or reorderable data.
+- Put all user-visible text, validation messages and notifications in the
+  existing i18n catalogs. Do not add production UI text directly to JSX.
+- Use semantic HTML and accessible Ant Design controls. Interactive elements
+  need an accessible name, keyboard operation and visible state feedback.
+- Keep raw HTML insertion, direct DOM mutation and browser storage access behind
+  a reviewed helper. Never render untrusted HTML.
+- Report handled request failures through the existing notification and
+  translation paths. Do not leave console logging in production code.
+- Keep components focused. Extract repeated forms, tables, request states and
+  authorization checks instead of creating large page components.
+- Keep CSS class names scoped to their component or page and preserve the
+  existing responsive layout. Avoid fixed dimensions that clip translated text.
+
+Frontend verification requires npm test and npm run build. A frontend change
+is not complete when TypeScript builds only; its state transitions, permission
+boundaries, stale-response handling and user-visible error paths need focused
+tests where they are affected.
+
 ## Security and dependencies
 
 - Treat dependency and image vulnerability reports as release blockers at
