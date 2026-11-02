@@ -33,6 +33,10 @@ Apply these rules to every new or modified Java file:
 - Prefer the surrounding XiPKI style for braces, imports, naming and simple
   accessors. Run the formatter or an equivalent line-length check on changed
   Java files.
+- Import project types and use their short names in code. Do not repeat a
+  project type's fully qualified name after it has been imported; retain fully
+  qualified names only in package/import declarations, string literals or a
+  documented namespace disambiguation.
 
 ## Security and dependencies
 
