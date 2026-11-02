@@ -38,6 +38,41 @@ Apply these rules to every new or modified Java file:
   qualified names only in package/import declarations, string literals or a
   documented namespace disambiguation.
 
+## Alibaba-derived Java rules
+
+The project adopts applicable rules from the official Alibaba Java Coding
+Guidelines. The project's two-space indentation and 100-column limit above
+override the Alibaba formatter's four-space and 120-column defaults.
+
+- Always use braces for if, else, for, while and do-while statements, including
+  single-statement bodies.
+- Catch the narrowest exception that can be handled. Do not catch
+  RuntimeException, Exception or Throwable as ordinary control flow. At
+  boundaries that must translate an unknown failure, preserve the cause and
+  return a safe diagnostic.
+- Never ignore an exception. Re-throw it, translate it, or record it with
+  context and the exception object. Preserve thread interruption when catching
+  InterruptedException.
+- Use SLF4J Logger fields and placeholder arguments. Do not write to
+  System.out, System.err or printStackTrace, and do not build log messages by
+  string concatenation.
+- Mark every interface or superclass override with @Override.
+- When equals is overridden, implement hashCode consistently. Use
+  Objects.equals or a constant-first comparison for nullable strings.
+- Replace repeated protocol, permission, timeout and size literals with named
+  constants. Keep security and wire values in one authoritative definition.
+- Give switch statements an explicit default or a documented exhaustive
+  enum/switch-expression reason. Keep conditional nesting shallow and extract
+  complicated predicates into named boolean variables or methods.
+- Parameterize every SQL value. Never concatenate request data into SQL, and
+  keep transaction rollback behavior explicit when a write fails.
+- Name tests after the class or behavior under test and keep them deterministic,
+  isolated and free of production credentials or business data.
+
+These rules apply immediately to new and modified code. Existing violations
+should be removed when the surrounding file or module is changed, without
+creating unrelated repository-wide formatting churn.
+
 ## Security and dependencies
 
 - Treat dependency and image vulnerability reports as release blockers at
