@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.xipki.mgmt.web.core.*;
@@ -31,7 +32,7 @@ public final class WebDatabaseHealth {
   static final Set<String> TABLES;
 
   static {
-    var tables = new java.util.HashSet<>(V1_TABLES);
+    var tables = new HashSet<>(V1_TABLES);
     tables.addAll(
         Set.of(
             "web_schema_migration",

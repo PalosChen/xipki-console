@@ -6,6 +6,7 @@ package org.xipki.mgmt.web.audit;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.util.stream.Collectors;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.ApiResponse;
 import org.xipki.mgmt.web.security.ManagementApiPolicy;
@@ -116,7 +117,7 @@ public final class AuditFilter {
     String id =
         identifiers.entrySet().stream()
             .map(e -> e.getKey() + "=" + e.getValue())
-            .collect(java.util.stream.Collectors.joining(","));
+            .collect(Collectors.joining(","));
     return new AuditEvent(
         actor,
         null,

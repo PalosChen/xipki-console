@@ -6,6 +6,7 @@ package org.xipki.mgmt.web.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import org.xipki.mgmt.web.core.*;
 
@@ -80,7 +81,7 @@ public class LoginThrottle {
       return HexFormat.of()
           .formatHex(
               MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)));
-    } catch (java.security.NoSuchAlgorithmException ex) {
+    } catch (NoSuchAlgorithmException ex) {
       throw new IllegalStateException(ex);
     }
   }

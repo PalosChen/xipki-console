@@ -6,6 +6,7 @@ package org.xipki.mgmt.web;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.xipki.mgmt.web.core.Json;
@@ -53,7 +54,7 @@ class EnrollmentJsonCompatibilityTest {
     p.key.slotIndex = 0;
     p.key.keyLabel = "CA-key";
     assertEquals(LEGACY, Json.write(p));
-    assertArrayEquals(LEGACY.getBytes(java.nio.charset.StandardCharsets.UTF_8), Json.bytes(p));
+    assertArrayEquals(LEGACY.getBytes(StandardCharsets.UTF_8), Json.bytes(p));
   }
 
   @Test

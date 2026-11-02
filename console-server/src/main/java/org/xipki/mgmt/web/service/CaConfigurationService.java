@@ -4,10 +4,11 @@
  */
 package org.xipki.mgmt.web.service;
 
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import javax.security.auth.x500.X500Principal;
-import org.xipki.mgmt.web.ca.CaDomain;
 import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.Crypto.*;
 import org.xipki.mgmt.web.core.*;
@@ -92,7 +93,7 @@ public class CaConfigurationService {
         certificates.validate(
             cert,
             chain,
-            java.util.Optional.empty(),
+            Optional.empty(),
             Instant.now(),
             CaCertificateValidationService.ValidationPurpose.IMPORT);
     if (!validation.valid()) {
@@ -125,7 +126,7 @@ public class CaConfigurationService {
         certificates.validate(
             entry.getCert(),
             entry.getCertchain(),
-            java.util.Optional.empty(),
+            Optional.empty(),
             Instant.now(),
             CaCertificateValidationService.ValidationPurpose.IMPORT);
     dto.setChainStatus(
@@ -181,10 +182,10 @@ public class CaConfigurationService {
           certificates.validate(
               cert,
               chain,
-              java.util.Optional.empty(),
+              Optional.empty(),
               Instant.now(),
               "active".equalsIgnoreCase(request.status)
-                      || current.getBase().getStatus() == CaDomain.CaStatus.active
+                      || current.getBase().getStatus() == CaStatus.active
                   ? CaCertificateValidationService.ValidationPurpose.ACTIVATE
                   : CaCertificateValidationService.ValidationPurpose.IMPORT);
       if (!check.valid() || current.getBase().getRevocationInfo() != null) {
@@ -223,7 +224,7 @@ public class CaConfigurationService {
     }
     try {
       return Instant.parse(s);
-    } catch (java.time.DateTimeException ex) {
+    } catch (DateTimeException ex) {
       throw new IllegalArgumentException("Invalid UTC ISO-8601 time");
     }
   }

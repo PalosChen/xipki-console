@@ -5,8 +5,10 @@
 package org.xipki.mgmt.web.core;
 
 import java.lang.reflect.*;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.*;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import org.xipki.codec.json.*;
 import org.xipki.mgmt.web.security.RoleBinding;
@@ -230,13 +232,13 @@ public final class Json {
       }
       return value;
     }
-    if (value instanceof java.math.BigInteger number) {
+    if (value instanceof BigInteger number) {
       return number.longValueExact();
     }
-    if (value instanceof java.time.temporal.TemporalAccessor || value instanceof java.util.UUID) {
+    if (value instanceof TemporalAccessor || value instanceof UUID) {
       return value.toString();
     }
-    if (value instanceof java.util.Date date) {
+    if (value instanceof Date date) {
       return date.getTime();
     }
     if (value instanceof Enum<?> enumeration) {

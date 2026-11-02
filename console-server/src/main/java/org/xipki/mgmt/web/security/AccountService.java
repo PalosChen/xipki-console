@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.xipki.mgmt.web.audit.AuditService;
 import org.xipki.mgmt.web.core.*;
 
@@ -137,7 +138,7 @@ public class AccountService {
           PermissionCatalog.entries().stream()
               .filter(PermissionCatalog.Permission::privileged)
               .map(p -> "'" + p.code() + "'")
-              .collect(java.util.stream.Collectors.joining(","));
+              .collect(Collectors.joining(","));
       sql +=
           " AND NOT EXISTS (SELECT 1 FROM web_role_binding b JOIN web_role r ON r.name=b.role_name"
               + " LEFT JOIN web_role_permission rp ON rp.role_id=r.id LEFT JOIN web_permission p ON"

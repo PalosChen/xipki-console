@@ -4,6 +4,12 @@
  */
 package org.xipki.mgmt.web.audit;
 
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.security.AccountService;
 import org.xipki.mgmt.web.security.ManagementApiPolicy;
@@ -52,7 +58,7 @@ public class AuditService {
       String action, String resourceType, String resourceId, Object before, Object after) {
     var actor = AccountService.principal();
     jakarta.servlet.http.HttpServletRequest http = RequestContext.request();
-    var details = new java.util.LinkedHashMap<String, Object>();
+    var details = new LinkedHashMap<String, Object>();
     details.put("before", before);
     details.put("after", after);
     String json = Json.write(details);
@@ -89,19 +95,19 @@ public class AuditService {
         permissions);
   }
 
-  public java.util.List<java.util.Map<String, Object>> query(
+  public List<Map<String, Object>> query(
       int page, int size, String actor, String action, String result) {
     return query(page, size, actor, action, result, null, null, null, null);
   }
 
-  public java.util.List<java.util.Map<String, Object>> query(
+  public List<Map<String, Object>> query(
       int page,
       int size,
       String actor,
       String action,
       String result,
-      java.time.Instant from,
-      java.time.Instant to,
+      Instant from,
+      Instant to,
       String resourceType,
       String resourceId) {
     StringBuilder sql =
@@ -111,7 +117,7 @@ public class AuditService {
                 + "http_method,request_path,resource_type,resource_id,action,result,"
                 + "failure_category,duration_ms,details_json,permission_codes"
                 + " FROM web_audit_event WHERE 1=1");
-    java.util.List<Object> args = new java.util.ArrayList<>();
+    List<Object> args = new ArrayList<>();
     if (actor != null && !actor.isBlank()) {
       sql.append(" AND actor_username=?");
       args.add(actor);
@@ -126,11 +132,11 @@ public class AuditService {
     }
     if (from != null) {
       sql.append(" AND event_time>=?");
-      args.add(java.sql.Timestamp.from(from));
+      args.add(Timestamp.from(from));
     }
     if (to != null) {
       sql.append(" AND event_time<=?");
-      args.add(java.sql.Timestamp.from(to));
+      args.add(Timestamp.from(to));
     }
     if (resourceType != null && !resourceType.isBlank()) {
       sql.append(" AND resource_type=?");
@@ -150,7 +156,7 @@ public class AuditService {
     return value == null ? null : value.substring(0, Math.min(value.length(), length));
   }
 
-  public java.util.Map<String, Object> authorizationContext(int page) {
+  public Map<String, Object> authorizationContext(int page) {
     var rows =
         jdbcTemplate.queryForList(
             """
@@ -162,7 +168,7 @@ public class AuditService {
             ORDER BY u.id,b.id,p.profile_name LIMIT 201 OFFSET ?
             """,
             (long) page * 200);
-    return java.util.Map.of(
+    return Map.of(
         "items",
         rows.subList(0, Math.min(200, rows.size())),
         "hasMore",

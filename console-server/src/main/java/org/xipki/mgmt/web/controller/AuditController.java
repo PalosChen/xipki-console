@@ -4,6 +4,8 @@
  */
 package org.xipki.mgmt.web.controller;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Map;
 import org.xipki.mgmt.web.audit.AuditCsv;
 import org.xipki.mgmt.web.audit.AuditService;
@@ -26,8 +28,8 @@ public class AuditController {
       String actor,
       String action,
       String result,
-      java.time.Instant from,
-      java.time.Instant to,
+      Instant from,
+      Instant to,
       String resourceType,
       String resourceId) {
     int safePage = Math.max(0, page);
@@ -54,8 +56,8 @@ public class AuditController {
       String actor,
       String action,
       String result,
-      java.time.Instant from,
-      java.time.Instant to,
+      Instant from,
+      Instant to,
       String resourceType,
       String resourceId) {
     if (from != null && to != null && from.isAfter(to)) {
@@ -65,7 +67,7 @@ public class AuditController {
         auditService.query(0, 5000, actor, action, result, from, to, resourceType, resourceId);
     byte[] data =
         AuditCsv.encode(rows.subList(0, Math.min(5000, rows.size())))
-            .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            .getBytes(StandardCharsets.UTF_8);
     return Reply.ok()
         .header("Cache-Control", "no-store")
         .header("Content-Disposition", "attachment; filename=\"xipki-audit.csv\"")

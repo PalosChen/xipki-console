@@ -15,6 +15,7 @@ import java.util.*;
 import javax.security.auth.x500.X500Principal;
 import org.junit.jupiter.api.Test;
 import org.xipki.mgmt.web.ca.CaDomain.KeyCertBytesPair;
+import org.xipki.mgmt.web.ca.Crypto.EncodedKey;
 import org.xipki.mgmt.web.core.Upload;
 import org.xipki.mgmt.web.service.CertificateMaterial;
 
@@ -89,7 +90,7 @@ class CryptoTest {
   void curveClassificationComparesParametersRatherThanFieldSize() throws Exception {
     var pair = key("EC");
     var original = (ECPublicKey) pair.getPublic();
-    assertEquals("SECP256R1", Crypto.keySpec(new Crypto.EncodedKey(original)));
+    assertEquals("SECP256R1", Crypto.keySpec(new EncodedKey(original)));
     var params = original.getParams();
     var wrong =
         new ECParameterSpec(
@@ -121,7 +122,7 @@ class CryptoTest {
             return original.getEncoded();
           }
         };
-    assertNull(Crypto.keySpec(new Crypto.EncodedKey(forged)));
+    assertNull(Crypto.keySpec(new EncodedKey(forged)));
   }
 
   @Test

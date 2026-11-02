@@ -5,6 +5,7 @@
 package org.xipki.mgmt.web.security;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
@@ -80,7 +81,7 @@ public class EnrollmentKeyStore {
               ".enrollment-",
               ".tmp",
               PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-------")));
-      try (var channel = java.nio.channels.FileChannel.open(temporary, StandardOpenOption.WRITE)) {
+      try (var channel = FileChannel.open(temporary, StandardOpenOption.WRITE)) {
         var buffer =
             ByteBuffer.wrap(
                 ByteBuffer.allocate(12 + encrypted.length).put(nonce).put(encrypted).array());
@@ -92,8 +93,7 @@ public class EnrollmentKeyStore {
       // A hard link publishes the complete file atomically and cannot overwrite an existing
       // operation.
       Files.createLink(target, temporary);
-      try (var dir =
-          java.nio.channels.FileChannel.open(Path.of(directory), StandardOpenOption.READ)) {
+      try (var dir = FileChannel.open(Path.of(directory), StandardOpenOption.READ)) {
         dir.force(true);
       }
     } catch (Exception ex) {
@@ -146,8 +146,7 @@ public class EnrollmentKeyStore {
     try {
       requireAvailable();
       Files.deleteIfExists(path(id));
-      try (var dir =
-          java.nio.channels.FileChannel.open(Path.of(directory), StandardOpenOption.READ)) {
+      try (var dir = FileChannel.open(Path.of(directory), StandardOpenOption.READ)) {
         dir.force(true);
       }
       return true;

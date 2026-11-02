@@ -4,6 +4,7 @@
  */
 package org.xipki.mgmt.web.service;
 
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.xipki.mgmt.web.core.*;
 
@@ -14,9 +15,9 @@ import org.xipki.mgmt.web.core.*;
  */
 public final class ProfileOperationLock implements AutoCloseable {
   private static final ReentrantReadWriteLock LOCK = new ReentrantReadWriteLock(true);
-  private final java.util.concurrent.locks.Lock held;
+  private final Lock held;
 
-  private ProfileOperationLock(java.util.concurrent.locks.Lock held) {
+  private ProfileOperationLock(Lock held) {
     this.held = held;
     held.lock();
   }

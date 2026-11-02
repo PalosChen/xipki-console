@@ -4,11 +4,10 @@
  */
 package org.xipki.mgmt.web.service;
 
-import org.xipki.mgmt.web.ca.CaDomain;
-import org.xipki.mgmt.web.ca.CaDomain.*;
+import org.xipki.mgmt.web.ca.CaDomain.CaMgmtException;
+import org.xipki.mgmt.web.ca.CaDomain.CaSystemStatus;
 import org.xipki.mgmt.web.ca.CaManager;
 import org.xipki.mgmt.web.ca.CaMgmtClient;
-import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.core.ApiException;
 
 /**
@@ -31,7 +30,7 @@ public class CaManagementService {
 
   public boolean isReady() {
     try {
-      return caMgmtClient.getCaSystemStatus() == CaDomain.CaSystemStatus.STARTED_AS_MASTER
+      return caMgmtClient.getCaSystemStatus() == CaSystemStatus.STARTED_AS_MASTER
           && caMgmtClient.getDbSchemas() != null
           && caMgmtClient.getCaNames() != null;
     } catch (CaMgmtException ex) {
@@ -40,7 +39,7 @@ public class CaManagementService {
   }
 
   /** Configured/inactive CAs are not present in XiPKI's runtime instance map. */
-  public void requireStarted(String name) throws CaDomain.CaMgmtException {
+  public void requireStarted(String name) throws CaMgmtException {
     if (!caMgmtClient.getSuccessfulCaNames().contains(name)) {
       throw new ApiException(409, "CA is not running; refresh the CA list and select a running CA");
     }

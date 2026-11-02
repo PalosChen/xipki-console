@@ -4,6 +4,7 @@
  */
 package org.xipki.mgmt.web.core;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -22,6 +23,6 @@ public interface Upload {
   String getContentType();
 
   default InputStream getInputStream() throws IOException {
-    return new java.io.ByteArrayInputStream(getBytes());
+    return new ByteArrayInputStream(getBytes());
   }
 }

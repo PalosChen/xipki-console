@@ -5,7 +5,7 @@
 package org.xipki.mgmt.web.security;
 
 import java.util.*;
-import org.xipki.mgmt.web.ca.CaDomain;
+import org.xipki.mgmt.web.ca.CaDomain.CaMgmtException;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.CaConfigurationRequest;
 
@@ -61,7 +61,7 @@ public final class CaFieldPermissions {
   }
 
   public static String authorize(AccessControl access, String name, CaConfigurationRequest request)
-      throws CaDomain.CaMgmtException {
+      throws CaMgmtException {
     var actions = actions(request);
     if (actions.isEmpty()) {
       throw new IllegalArgumentException("No configuration changes submitted");

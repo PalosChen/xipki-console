@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
+import java.security.cert.Certificate;
 import java.security.spec.ECGenParameterSpec;
 import java.util.*;
 import org.xipki.codec.ConfPairs;
@@ -64,7 +65,7 @@ public class CaKeyMaterialService {
             "main",
             pair.getPrivate(),
             inputPassword,
-            new java.security.cert.Certificate[] {Crypto.placeholder(pair).toJceCert()});
+            new Certificate[] {Crypto.placeholder(pair).toJceCert()});
       } else if ("pkcs12".equals(request.mode)) {
         inputPassword = Objects.requireNonNullElse(request.password, "").toCharArray();
         store = KeyStore.getInstance("PKCS12");
@@ -176,7 +177,7 @@ public class CaKeyMaterialService {
             new ByteArrayInputStream(
                 Base64.getDecoder().decode(verified.value("keystore").substring(7))),
             password);
-        var chain = new ArrayList<java.security.cert.Certificate>();
+        var chain = new ArrayList<Certificate>();
         chain.add(certificate.toJceCert());
         if (issuers != null) {
           for (var issuer : issuers) {
@@ -184,10 +185,7 @@ public class CaKeyMaterialService {
           }
         }
         selected.setKeyEntry(
-            "main",
-            selected.getKey("main", password),
-            password,
-            chain.toArray(java.security.cert.Certificate[]::new));
+            "main", selected.getKey("main", password), password, chain.toArray(Certificate[]::new));
         var output = new ByteArrayOutputStream();
         selected.store(output, password);
         verified.putPair(
@@ -262,11 +260,11 @@ public class CaKeyMaterialService {
     }
   }
 
-  public static java.util.List<X509Cert> certificates(java.util.List<String> values) {
+  public static List<X509Cert> certificates(List<String> values) {
     if (values == null) {
       return null;
     }
-    var result = new java.util.ArrayList<X509Cert>();
+    var result = new ArrayList<X509Cert>();
     for (String value : values) {
       byte[] bytes = decode(value);
       try {

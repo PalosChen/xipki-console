@@ -7,6 +7,7 @@ package org.xipki.mgmt.web.service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -129,7 +130,7 @@ public final class CaEnrollmentSubjectOrder {
         requestedTypes.add(oid(rdn.getType()));
       }
       List<String> expectedTypes = new ArrayList<>();
-      for (String type : new java.util.LinkedHashSet<>(profileTypes)) {
+      for (String type : new LinkedHashSet<>(profileTypes)) {
         for (String requested : requestedTypes) {
           if (type.equals(requested)) {
             expectedTypes.add(type);

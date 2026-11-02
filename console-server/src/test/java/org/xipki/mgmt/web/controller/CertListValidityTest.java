@@ -12,6 +12,7 @@ import java.lang.reflect.Proxy;
 import java.math.BigInteger;
 import java.security.KeyPairGenerator;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -306,7 +307,7 @@ class CertListValidityTest {
           }
         };
     var controller = new CertController(service, access, ownership);
-    var found = new java.util.ArrayList<String>();
+    var found = new ArrayList<String>();
     String cursor = null;
     int pages = 0;
     do {

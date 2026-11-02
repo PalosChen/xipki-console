@@ -8,7 +8,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Proxy;
+import java.math.BigInteger;
 import java.security.KeyStore;
+import java.time.Instant;
 import java.util.*;
 import javax.security.auth.x500.X500Principal;
 import org.junit.jupiter.api.Test;
@@ -229,12 +231,11 @@ class DomainContractsTest {
   void certificateSerialAndTimesAreStrictBeforeRemoteMutation() {
     assertThrows(IllegalArgumentException.class, () -> CertificateMaterial.serial("-1"));
     assertThrows(IllegalArgumentException.class, () -> CertificateMaterial.serial("0"));
-    assertEquals(new java.math.BigInteger("a1", 16), CertificateMaterial.serial("a1"));
+    assertEquals(new BigInteger("a1", 16), CertificateMaterial.serial("a1"));
     assertThrows(
         IllegalArgumentException.class,
         () -> CertificateMaterial.time("2026-10-27T00:00:00+08:00"));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> CertificateMaterial.range(java.time.Instant.MAX, java.time.Instant.MIN));
+        IllegalArgumentException.class, () -> CertificateMaterial.range(Instant.MAX, Instant.MIN));
   }
 }

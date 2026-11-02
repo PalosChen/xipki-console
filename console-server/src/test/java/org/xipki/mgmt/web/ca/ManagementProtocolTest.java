@@ -6,8 +6,11 @@ package org.xipki.mgmt.web.ca;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPairGenerator;
+import java.security.Security;
 import java.time.Instant;
 import java.util.*;
 import javax.security.auth.x500.X500Principal;
@@ -104,7 +107,7 @@ class ManagementProtocolTest {
 
   @Test
   void certificatesRevocationChainsAndKeyPairsUseExistingEnvelopes() throws Exception {
-    var generator = java.security.KeyPairGenerator.getInstance("RSA");
+    var generator = KeyPairGenerator.getInstance("RSA");
     generator.initialize(2048);
     var pair = generator.generateKeyPair();
     var cert = Crypto.placeholder(pair);
@@ -174,7 +177,7 @@ class ManagementProtocolTest {
         new CaMgmtClient(
             new ManagementProtocol(
                 (action, body) -> {
-                  throw new java.io.IOException("unavailable");
+                  throw new IOException("unavailable");
                 }));
     assertThrows(CaMgmtException.class, () -> unavailable.removeCa("ca"));
     var large =
@@ -190,6 +193,6 @@ class ManagementProtocolTest {
         ClassNotFoundException.class,
         () -> Class.forName("org.bouncycastle.jce.provider.BouncyCastleProvider"));
     assertThrows(ClassNotFoundException.class, () -> Class.forName("org.xipki.security.X509Cert"));
-    assertNull(java.security.Security.getProvider("BC"));
+    assertNull(Security.getProvider("BC"));
   }
 }

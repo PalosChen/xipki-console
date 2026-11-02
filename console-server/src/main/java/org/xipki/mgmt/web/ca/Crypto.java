@@ -349,7 +349,7 @@ public final class Crypto {
 
   public static String signatureAlgorithm(PrivateKey key) {
     String algorithm = key.getAlgorithm();
-    if (key instanceof java.security.interfaces.EdECPrivateKey ed) {
+    if (key instanceof EdECPrivateKey ed) {
       return ed.getParams().getName();
     }
     return switch (algorithm) {
@@ -475,7 +475,7 @@ public final class Crypto {
       }
       return null;
     }
-    if (k instanceof java.security.interfaces.EdECPublicKey ed) {
+    if (k instanceof EdECPublicKey ed) {
       return ed.getParams().getName().toUpperCase(Locale.ROOT);
     }
     return null;

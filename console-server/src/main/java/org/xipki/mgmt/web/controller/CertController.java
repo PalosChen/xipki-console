@@ -16,7 +16,6 @@ import javax.naming.ldap.LdapName;
 import javax.security.auth.x500.X500Principal;
 import org.xipki.mgmt.web.audit.AuditTargetCapture;
 import org.xipki.mgmt.web.ca.CaDomain.*;
-import org.xipki.mgmt.web.ca.Crypto;
 import org.xipki.mgmt.web.ca.Crypto.*;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.ApiResponse;
@@ -275,12 +274,10 @@ public class CertController {
       var pair =
           manager.generateKeyCert(grant.ca().name(), grant.profile(), body.getSubject(), nb, na);
       AuditTargetCapture.identify(
-          request,
-          "serial",
-          Crypto.X509Util.parseCert(pair.getCert()).getSerialNumber().toString(16));
+          request, "serial", X509Util.parseCert(pair.getCert()).getSerialNumber().toString(16));
       ownership.record(
           grant.ca(),
-          Crypto.X509Util.parseCert(pair.getCert()).getSerialNumber().toString(16),
+          X509Util.parseCert(pair.getCert()).getSerialNumber().toString(16),
           grant.profile());
       char[] password = body.getDownloadPassword().toCharArray();
       body.setDownloadPassword(null);
@@ -290,7 +287,7 @@ public class CertController {
           .header("Cache-Control", "no-store")
           .header(
               "X-Certificate-Serial",
-              Crypto.X509Util.parseCert(pair.getCert()).getSerialNumber().toString(16))
+              X509Util.parseCert(pair.getCert()).getSerialNumber().toString(16))
           .header("Content-Disposition", "attachment; filename=\"key-certificate.p12\"")
           .body(pkcs12);
     }
@@ -320,13 +317,9 @@ public class CertController {
       CertificateMaterial.requireKeypairGenerator(service.getCaManager(), ca);
       KeyCertBytesPair pair = service.getCaManager().generateKeyCert(ca, profile, subject, nb, na);
       AuditTargetCapture.identify(
-          request,
-          "serial",
-          Crypto.X509Util.parseCert(pair.getCert()).getSerialNumber().toString(16));
+          request, "serial", X509Util.parseCert(pair.getCert()).getSerialNumber().toString(16));
       ownership.record(
-          grant.ca(),
-          Crypto.X509Util.parseCert(pair.getCert()).getSerialNumber().toString(16),
-          profile);
+          grant.ca(), X509Util.parseCert(pair.getCert()).getSerialNumber().toString(16), profile);
 
       Map<String, String> result = new LinkedHashMap<>();
       result.put("cert", Base64.getEncoder().encodeToString(pair.getCert()));

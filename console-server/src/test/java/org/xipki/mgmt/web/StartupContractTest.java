@@ -6,11 +6,14 @@ package org.xipki.mgmt.web;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.xipki.mgmt.web.ca.CaDomain;
+import org.xipki.mgmt.web.ca.CaDomain.CaMgmtException;
 import org.xipki.mgmt.web.core.ApiException;
 import org.xipki.mgmt.web.core.Config;
 
@@ -22,13 +25,10 @@ class StartupContractTest {
 
   @Test
   void distinguishesCaRejectionFromUncertainTransportOutcome() {
-    assertEquals(
-        400, Main.LiteServlet.error(new CaDomain.CaMgmtException("rejected"), null).status());
+    assertEquals(400, Main.LiteServlet.error(new CaMgmtException("rejected"), null).status());
     assertEquals(
         503,
-        Main.LiteServlet.error(
-                new CaDomain.CaMgmtException(new java.io.IOException("unavailable")), null)
-            .status());
+        Main.LiteServlet.error(new CaMgmtException(new IOException("unavailable")), null).status());
   }
 
   @Test
@@ -76,8 +76,8 @@ class StartupContractTest {
     try (var index = Main.class.getResourceAsStream("/static/index.html")) {
       assertNotNull(index, "Build the existing frontend before packaging the lite backend");
       var matcher =
-          java.util.regex.Pattern.compile("(?:src|href)=\"(/assets/[^\"]+)\"")
-              .matcher(new String(index.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+          Pattern.compile("(?:src|href)=\"(/assets/[^\"]+)\"")
+              .matcher(new String(index.readAllBytes(), StandardCharsets.UTF_8));
       int count = 0;
       while (matcher.find()) {
         assertNotNull(Main.class.getResource("/static" + matcher.group(1)));

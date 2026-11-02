@@ -5,6 +5,7 @@
 package org.xipki.mgmt.web.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.*;
 import org.xipki.mgmt.web.ca.CaDomain.*;
@@ -100,7 +101,7 @@ public class SystemController {
     try (var guard = ProfileOperationLock.mutation()) {
       RecentAuthentication.require();
       response.setHeader("Cache-Control", "no-store");
-      service.getCaManager().loadConfAndClose(new java.io.ByteArrayInputStream(file.getBytes()));
+      service.getCaManager().loadConfAndClose(new ByteArrayInputStream(file.getBytes()));
       return ApiResponse.ok();
     }
   }

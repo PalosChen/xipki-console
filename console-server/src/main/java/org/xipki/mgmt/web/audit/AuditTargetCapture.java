@@ -6,7 +6,7 @@ package org.xipki.mgmt.web.audit;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
-import org.xipki.mgmt.web.ca.CaDomain;
+import org.xipki.mgmt.web.ca.CaDomain.CrlReason;
 import org.xipki.mgmt.web.core.ApiException;
 import org.xipki.mgmt.web.dto.*;
 import org.xipki.mgmt.web.security.CaFieldPermissions;
@@ -76,12 +76,10 @@ public final class AuditTargetCapture {
       if (req.getRequestURI().matches("/api/cert/[^/]+/[^/]+/revoke")) {
         try {
           var reason =
-              CaDomain.CrlReason.forNameOrText(
-                  values.get("reason") instanceof String s ? s : "unspecified");
+              CrlReason.forNameOrText(values.get("reason") instanceof String s ? s : "unspecified");
           req.setAttribute(
               "web.permissionCodes",
-              Set.of(
-                  reason == CaDomain.CrlReason.CERTIFICATE_HOLD ? "CERT_SUSPEND" : "CERT_REVOKE"));
+              Set.of(reason == CrlReason.CERTIFICATE_HOLD ? "CERT_SUSPEND" : "CERT_REVOKE"));
         } catch (IllegalArgumentException ignored) {
         }
       } else if (req.getRequestURI().equals("/api/ca/aliases")) {

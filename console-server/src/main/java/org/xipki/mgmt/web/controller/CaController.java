@@ -4,6 +4,7 @@
  */
 package org.xipki.mgmt.web.controller;
 
+import java.io.ByteArrayOutputStream;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -181,7 +182,7 @@ public class CaController {
     if (certs == null || certs.isEmpty()) {
       certs = List.of(entry.getCert());
     }
-    var output = new java.io.ByteArrayOutputStream();
+    var output = new ByteArrayOutputStream();
     for (var cert : certs) {
       output.writeBytes(PemEncoder.encode(cert.getEncoded(), PemEncoder.PemLabel.CERTIFICATE));
     }

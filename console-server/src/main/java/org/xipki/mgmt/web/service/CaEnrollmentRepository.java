@@ -4,6 +4,8 @@
  */
 package org.xipki.mgmt.web.service;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.CaConfigurationRequest;
@@ -55,7 +57,7 @@ public class CaEnrollmentRepository {
     this.jdbc = jdbc;
   }
 
-  private Operation row(java.sql.ResultSet r, int n) throws java.sql.SQLException {
+  private Operation row(ResultSet r, int n) throws SQLException {
     try {
       return new Operation(
           r.getString("operation_id"),
@@ -65,7 +67,7 @@ public class CaEnrollmentRepository {
           r.getLong("version"),
           Json.read(r.getString("public_json"), Data.class));
     } catch (Exception ex) {
-      throw new java.sql.SQLException("Invalid enrollment metadata");
+      throw new SQLException("Invalid enrollment metadata");
     }
   }
 

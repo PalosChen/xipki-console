@@ -7,6 +7,7 @@ package org.xipki.mgmt.web;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.time.Instant;
 import java.util.*;
@@ -65,9 +66,7 @@ class CaCertificateValidationServiceTest {
             .validate(sub, List.of(root), Optional.of(root), NOW, ValidationPurpose.SUB_CA)
             .valid());
     builder.extension(
-        "1.2.3.4.5.6.7",
-        true,
-        Der.tagged(12, "unsupported".getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        "1.2.3.4.5.6.7", true, Der.tagged(12, "unsupported".getBytes(StandardCharsets.UTF_8)));
     var unknownCritical = sign(builder, key);
     assertFalse(
         validator

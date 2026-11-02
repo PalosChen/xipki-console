@@ -16,7 +16,6 @@ import org.apache.catalina.startup.Tomcat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xipki.mgmt.web.audit.*;
-import org.xipki.mgmt.web.ca.CaDomain;
 import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.CaMgmtClient;
 import org.xipki.mgmt.web.controller.*;
@@ -24,7 +23,6 @@ import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.core.AccessDeniedException;
 import org.xipki.mgmt.web.db.*;
 import org.xipki.mgmt.web.security.*;
-import org.xipki.mgmt.web.security.RoleValidationException;
 import org.xipki.mgmt.web.service.*;
 
 /**
@@ -379,7 +377,7 @@ public final class Main {
       } else if (ex instanceof IllegalArgumentException || ex instanceof ClassCastException) {
         status = 400;
         message = "Invalid request fields or format";
-      } else if (ex instanceof CaDomain.CaMgmtException) {
+      } else if (ex instanceof CaMgmtException) {
         boolean transport = false;
         for (Throwable cause = ex; cause != null; cause = cause.getCause()) {
           if (cause instanceof IOException) {

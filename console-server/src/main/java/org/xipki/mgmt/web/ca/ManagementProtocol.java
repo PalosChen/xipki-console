@@ -5,6 +5,8 @@
 package org.xipki.mgmt.web.ca;
 
 import java.io.*;
+import java.lang.reflect.Modifier;
+import java.math.BigInteger;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -155,7 +157,7 @@ public final class ManagementProtocol {
     if (value == null) {
       return null;
     }
-    if (value instanceof java.math.BigInteger n) {
+    if (value instanceof BigInteger n) {
       return HexFormat.of().formatHex(n.toByteArray());
     }
     if (value instanceof byte[] b) {
@@ -228,8 +230,7 @@ public final class ManagementProtocol {
       }
     } else {
       for (var f : value.getClass().getDeclaredFields()) {
-        if (java.lang.reflect.Modifier.isStatic(f.getModifiers())
-            || java.lang.reflect.Modifier.isTransient(f.getModifiers())) {
+        if (Modifier.isStatic(f.getModifiers()) || Modifier.isTransient(f.getModifiers())) {
           continue;
         }
         String suffix = Character.toUpperCase(f.getName().charAt(0)) + f.getName().substring(1);

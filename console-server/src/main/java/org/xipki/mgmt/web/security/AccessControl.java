@@ -5,10 +5,10 @@
 package org.xipki.mgmt.web.security;
 
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
-import org.xipki.mgmt.web.ca.CaDomain;
 import org.xipki.mgmt.web.ca.CaDomain.*;
-import org.xipki.mgmt.web.ca.Crypto;
+import org.xipki.mgmt.web.ca.Crypto.X509Cert;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.CaDto;
 import org.xipki.mgmt.web.service.CaCertificateValidationService;
@@ -149,12 +149,12 @@ public class AccessControl {
     }
     var caEntry = service.getCaManager().getCa(identity.name());
     if (caEntry.getBase() == null
-        || caEntry.getBase().getStatus() != CaDomain.CaStatus.active
+        || caEntry.getBase().getStatus() != CaStatus.active
         || !service.getCaManager().getSuccessfulCaNames().contains(identity.name())
         || caEntry.getBase().getRevocationInfo() != null) {
       throw denied();
     }
-    var chain = new ArrayList<Crypto.X509Cert>();
+    var chain = new ArrayList<X509Cert>();
     chain.add(caEntry.getCert());
     if (caEntry.getCertchain() != null) {
       chain.addAll(caEntry.getCertchain());
@@ -269,7 +269,7 @@ public class AccessControl {
   public static String fingerprint(byte[] bytes) {
     try {
       return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
-    } catch (java.security.NoSuchAlgorithmException ex) {
+    } catch (NoSuchAlgorithmException ex) {
       throw new IllegalStateException(ex);
     }
   }

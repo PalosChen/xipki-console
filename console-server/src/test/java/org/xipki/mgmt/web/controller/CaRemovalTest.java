@@ -6,6 +6,7 @@ package org.xipki.mgmt.web.controller;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,7 +44,7 @@ class CaRemovalTest {
                 new Class<?>[] {CaManager.class},
                 (proxy, method, args) -> {
                   if (method.getName().equals("removeCa")) {
-                    throw new CaMgmtException(new java.io.IOException("lost response"));
+                    throw new CaMgmtException(new IOException("lost response"));
                   }
                   if (method.getName().equals("getCaNames")) {
                     return Set.of();
@@ -64,7 +65,7 @@ class CaRemovalTest {
                 new Class<?>[] {CaManager.class},
                 (proxy, method, args) -> {
                   if (method.getName().equals("removeCa")) {
-                    throw new CaMgmtException(new java.io.IOException("lost response"));
+                    throw new CaMgmtException(new IOException("lost response"));
                   }
                   if (method.getName().equals("getCaNames")) {
                     return Set.of("parent");

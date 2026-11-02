@@ -8,7 +8,8 @@ import java.security.MessageDigest;
 import java.security.cert.*;
 import java.time.Instant;
 import java.util.*;
-import org.xipki.mgmt.web.ca.CaDomain;
+import org.xipki.mgmt.web.ca.CaDomain.CaEntry;
+import org.xipki.mgmt.web.ca.CaDomain.CaMgmtException;
 import org.xipki.mgmt.web.ca.CaManager;
 import org.xipki.mgmt.web.ca.Crypto.*;
 import org.xipki.mgmt.web.core.*;
@@ -246,9 +247,9 @@ public class CaCertificateValidationService {
   }
 
   public static boolean requireNotKnownRevoked(CaManager manager, List<X509Cert> chain)
-      throws CaDomain.CaMgmtException {
+      throws CaMgmtException {
     boolean allKnown = true;
-    var local = new HashMap<String, CaDomain.CaEntry>();
+    var local = new HashMap<String, CaEntry>();
     for (String name : manager.getCaNames()) {
       var ca = manager.getCa(name);
       if (ca != null && ca.getCert() != null) {

@@ -13,7 +13,6 @@ import java.time.Instant;
 import java.util.*;
 import javax.security.auth.x500.X500Principal;
 import org.xipki.codec.ConfPairs;
-import org.xipki.mgmt.web.ca.CaDomain;
 import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.Crypto;
 import org.xipki.mgmt.web.ca.Crypto.*;
@@ -274,7 +273,7 @@ public class CaEnrollmentService {
     return store;
   }
 
-  private static Crypto.Csr csr(String text) throws Exception {
+  private static Csr csr(String text) throws Exception {
     return Crypto.csr(CaKeyMaterialService.decode(text));
   }
 
@@ -290,7 +289,7 @@ public class CaEnrollmentService {
   private CaEntry parent(Data d) throws CaMgmtException {
     var entry = configuration.required(d.parentCa);
     if (!d.parentFingerprint.equals(CaCertificateValidationService.fingerprint(entry.getCert()))
-        || entry.getBase().getStatus() != CaDomain.CaStatus.active
+        || entry.getBase().getStatus() != CaStatus.active
         || entry.getBase().getRevocationInfo() != null
         || !engine.getCaManager().getSuccessfulCaNames().contains(d.parentCa)) {
       throw new IllegalArgumentException("Parent CA is unavailable or changed");
@@ -484,7 +483,7 @@ public class CaEnrollmentService {
     var entry =
         new CaEntry(
             new CaConfigurationMapper().create(d.keyType, d.config, null),
-            new CaDomain.NameId(null, d.name),
+            new NameId(null, d.name),
             material);
     entry.setCert(cert);
     entry.setCertchain(chain);

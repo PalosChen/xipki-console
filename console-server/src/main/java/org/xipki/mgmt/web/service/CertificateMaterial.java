@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.security.KeyStore;
+import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateFactory;
 import java.time.Instant;
@@ -136,7 +137,7 @@ public final class CertificateMaterial {
       String algorithm = Crypto.signatureAlgorithm(key);
       var proof = Crypto.signature(algorithm);
       byte[] challenge = new byte[32];
-      new java.security.SecureRandom().nextBytes(challenge);
+      new SecureRandom().nextBytes(challenge);
       proof.initSign(key);
       proof.update(challenge);
       byte[] signed = proof.sign();

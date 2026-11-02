@@ -4,9 +4,11 @@
  */
 package org.xipki.mgmt.web.service;
 
+import java.util.List;
+import java.util.Locale;
 import org.xipki.codec.ConfPairs;
 import org.xipki.mgmt.web.ca.CaDomain.*;
-import org.xipki.mgmt.web.ca.Crypto;
+import org.xipki.mgmt.web.ca.Crypto.X509Cert;
 import org.xipki.mgmt.web.core.*;
 import org.xipki.mgmt.web.dto.CaConfigurationRequest;
 import org.xipki.pkix.util.conf.Validity;
@@ -100,7 +102,7 @@ public class CaConfigurationMapper {
         if (r.encodedCertchain != null) {
           c.setEncodedCertchain(
               CaKeyMaterialService.certificates(r.encodedCertchain).stream()
-                  .map(Crypto.X509Cert::getEncoded)
+                  .map(X509Cert::getEncoded)
                   .toList());
         }
       }
@@ -125,8 +127,7 @@ public class CaConfigurationMapper {
     try {
       var b =
           new BaseCaInfo(
-              signerType,
-              new Permissions(r.permissions == null ? java.util.List.of("all") : r.permissions));
+              signerType, new Permissions(r.permissions == null ? List.of("all") : r.permissions));
       b.setStatus(c.getStatus() == null ? CaStatus.inactive : c.getStatus());
       b.setMaxValidity(c.getMaxValidity() == null ? validity("365d") : c.getMaxValidity());
       b.setNextCrlNo(nextCrlNo == null ? 1 : nextCrlNo);
@@ -218,6 +219,6 @@ public class CaConfigurationMapper {
     if (value == null || !value.matches("[a-zA-Z0-9][a-zA-Z0-9_.-]{0,63}")) {
       throw new IllegalArgumentException("Invalid resource name");
     }
-    return value.toLowerCase(java.util.Locale.ROOT);
+    return value.toLowerCase(Locale.ROOT);
   }
 }

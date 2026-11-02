@@ -8,7 +8,9 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.*;
 import javax.crypto.Mac;
@@ -276,7 +278,7 @@ public final class SessionManager {
           .formatHex(
               MessageDigest.getInstance("SHA-256")
                   .digest(token.getBytes(StandardCharsets.US_ASCII)));
-    } catch (java.security.NoSuchAlgorithmException ex) {
+    } catch (NoSuchAlgorithmException ex) {
       throw new IllegalStateException(ex);
     }
   }
@@ -333,7 +335,7 @@ public final class SessionManager {
       return Base64.getUrlEncoder()
           .withoutPadding()
           .encodeToString(mac.doFinal(value.getBytes(StandardCharsets.US_ASCII)));
-    } catch (java.security.GeneralSecurityException ex) {
+    } catch (GeneralSecurityException ex) {
       throw new IllegalStateException(ex);
     }
   }

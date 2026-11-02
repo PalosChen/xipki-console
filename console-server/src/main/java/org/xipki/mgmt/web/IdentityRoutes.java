@@ -4,6 +4,7 @@
  */
 package org.xipki.mgmt.web;
 
+import java.time.DateTimeException;
 import java.time.Instant;
 import java.util.*;
 import org.xipki.mgmt.web.controller.*;
@@ -149,7 +150,7 @@ public final class IdentityRoutes {
     }
     try {
       return Instant.parse(value);
-    } catch (java.time.DateTimeException ex) {
+    } catch (DateTimeException ex) {
       throw new IllegalArgumentException("Invalid timestamp");
     }
   }

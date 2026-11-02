@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.sun.net.httpserver.*;
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.*;
@@ -89,7 +90,7 @@ class ManagementTlsTest {
     tm.init(trust);
     var ssl = SSLContext.getInstance("TLS");
     ssl.init(km.getKeyManagers(), tm.getTrustManagers(), new SecureRandom());
-    var server = HttpsServer.create(new java.net.InetSocketAddress("127.0.0.1", 0), 0);
+    var server = HttpsServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
     server.setHttpsConfigurator(
         new HttpsConfigurator(ssl) {
           @Override

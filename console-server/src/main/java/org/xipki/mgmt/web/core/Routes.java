@@ -7,6 +7,9 @@ package org.xipki.mgmt.web.core;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import org.xipki.mgmt.web.audit.AuditTargetCapture;
 
@@ -133,7 +136,7 @@ public final class Routes {
 
   private static String decode(String value) {
     try {
-      return java.net.URLDecoder.decode(value, java.nio.charset.StandardCharsets.UTF_8);
+      return URLDecoder.decode(value, StandardCharsets.UTF_8);
     } catch (Exception ex) {
       throw new ApiException(400, "Invalid path");
     }
@@ -252,7 +255,7 @@ public final class Routes {
               .matches("application/(?:[a-z0-9.-]+\\+)?json(?:;.*)?")) {
         throw new ApiException(415, "JSON content type required");
       }
-      T value = Json.read(new String(bytes, java.nio.charset.StandardCharsets.UTF_8), type);
+      T value = Json.read(new String(bytes, StandardCharsets.UTF_8), type);
       if (value == null) {
         throw new IllegalArgumentException("Request body is required");
       }
@@ -301,7 +304,7 @@ public final class Routes {
         return part.getContentType();
       }
 
-      public java.io.InputStream getInputStream() throws IOException {
+      public InputStream getInputStream() throws IOException {
         return part.getInputStream();
       }
     }

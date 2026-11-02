@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
@@ -20,7 +22,7 @@ class ReadinessProbeTest {
   void cachesSuccessAndFailureUntilTheNextRefresh() {
     var now = new AtomicLong();
     var checks = new AtomicInteger();
-    var ready = new java.util.concurrent.atomic.AtomicBoolean(true);
+    var ready = new AtomicBoolean(true);
     var probe =
         new ReadinessProbe(
             () -> {
@@ -65,7 +67,7 @@ class ReadinessProbeTest {
     var first = new Thread(probe::isReady);
     first.start();
     try {
-      assertTrue(entered.await(5, java.util.concurrent.TimeUnit.SECONDS));
+      assertTrue(entered.await(5, TimeUnit.SECONDS));
       assertFalse(probe.isReady());
       assertEquals(1, checks.get());
     } finally {

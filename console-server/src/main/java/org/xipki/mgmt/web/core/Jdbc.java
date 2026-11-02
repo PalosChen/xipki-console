@@ -5,6 +5,7 @@
 package org.xipki.mgmt.web.core;
 
 import java.sql.*;
+import java.time.Instant;
 import java.util.*;
 import javax.sql.DataSource;
 
@@ -155,7 +156,7 @@ public final class Jdbc {
     statement.setQueryTimeout(5);
     for (int i = 0; i < args.length; i++) {
       Object value = args[i];
-      if (value instanceof java.time.Instant instant) {
+      if (value instanceof Instant instant) {
         value = Timestamp.from(instant);
       }
       statement.setObject(i + 1, value);
