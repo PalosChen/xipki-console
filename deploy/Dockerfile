@@ -1,11 +1,11 @@
 # Docker host: build from the xipki-console repository root after packaging console-server/.
 ARG JAVA_IMAGE=alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
 FROM ${JAVA_IMAGE} AS runtime-base
-# Keep Java 17 while installing current vendor security patches. Scan the final image before release.
-RUN apk upgrade --no-cache && apk add --no-cache openjdk17-jre-headless \
+# Keep Java 25 while installing current vendor security patches. Scan the final image before release.
+RUN apk upgrade --no-cache && apk add --no-cache openjdk25-jre-headless \
     && addgroup -g 10002 web && addgroup -g 10003 management \
     && adduser -D -H -u 10002 -G web web && addgroup web management
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 RUN java -version
 FROM runtime-base AS console

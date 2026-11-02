@@ -3,7 +3,7 @@
 **English** | [简体中文](README.zh-CN.md)
 
 XiPKI Console is a web management interface for [XiPKI](https://github.com/xipki/xipki).
-The React frontend supports English and Simplified Chinese. The Java 17 backend
+The React frontend supports English and Simplified Chinese. The Java 25 backend
 uses embedded Tomcat and JDBC, communicates with the CA management endpoint over
 mutual TLS, and uses XiPKI utilities for configuration and JSON encoding.
 
@@ -31,7 +31,7 @@ The CA database is configured separately and can use H2 or an external database.
 
 ## Build
 
-Requirements: JDK 17+, Maven, Node.js 22.16+ and npm. Build and test from the
+Requirements: JDK 25+, Maven, Node.js 22.16+ and npm. Build and test from the
 repository root:
 
 ```sh
@@ -39,12 +39,13 @@ export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
 sh scripts/build.sh
 ```
 
-The backend depends on XiPKI `util-extra:6.6.0-SNAPSHOT`. When
-`XIPKI_SOURCE_DIR` is set, the build installs the matching utility artifacts
-from that checkout. Omit it when the artifacts are already available in the
-local Maven repository. The script installs locked frontend dependencies,
-runs frontend and backend tests, and builds both components. To create a host
-distribution archive, run `sh scripts/package.sh`; output is in `dist/`.
+The backend depends on the XiPKI `7.0.0-SNAPSHOT` modules declared in
+`console-server/pom.xml`. When `XIPKI_SOURCE_DIR` is set, the build installs
+the matching `util` module and its dependencies from that checkout. Omit it
+when the artifacts are already available in the local Maven repository. The
+script installs locked frontend dependencies, runs frontend and backend tests,
+and builds both components. To create a host distribution archive, run
+`sh scripts/package.sh`; output is in `dist/`.
 
 Use a compatible XiPKI source revision for the version in
 `console-server/pom.xml`. Other versions require compatibility testing.
@@ -65,7 +66,7 @@ when the backend uses a different address.
 ## Docker deployment
 
 `sh scripts/build.sh --docker` builds the Console and database images. The
-Console image packages the prebuilt application on Alpine with Java 17. The
+Console image packages the prebuilt application on Alpine with Java 25. The
 database image uses MariaDB 11.4.13 on Alpine. See the
 [security guide](guides/security.md) for image verification requirements.
 
@@ -75,18 +76,18 @@ distribution image** that exports a management client to `/export/web` and runs
 the management endpoint at `https://ca:8443/ca/mgmt`. The CA image must support
 this provisioning contract.
 
-The CA image is built separately from a matching XiPKI `6.6.0-SNAPSHOT`
-distribution checkout containing `docker/ca/Dockerfile`. This repository does
-not publish a CA image. Use the same XiPKI checkout for the Console build and
-pin its revision for reproducible deployments. On a development host with
-Docker running, build and scan the images before starting them:
+The CA image is built and maintained separately from this repository. The
+current XiPKI upstream master no longer contains the historical
+`docker/ca/Dockerfile`, so `CA_IMAGE` must be supplied from a separately
+maintained XiPKI distribution that exports `/export/web` and serves
+`https://ca:8443/ca/mgmt`. Pin the CA image to a reviewed digest for
+reproducible deployments. On a development host with Docker running, build and
+scan the Console and database images before starting them:
 
 ```sh
 export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
 sh scripts/build.sh --docker
-docker build -f "$XIPKI_SOURCE_DIR/docker/ca/Dockerfile" \
-  -t xipki-ca:security-update "$XIPKI_SOURCE_DIR"
-export CA_IMAGE=xipki-ca:security-update
+export CA_IMAGE=your-xipki-7-ca-image
 export WEB_IMAGE=xipki-console:local
 export DB_IMAGE=xipki-console-db:local
 sh scripts/check-security.sh

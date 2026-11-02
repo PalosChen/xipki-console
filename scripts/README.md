@@ -18,21 +18,21 @@ build framework or process manager is needed.
 ## Local Docker startup
 
 Start Docker Desktop (macOS) or the Docker daemon (Linux). Build commands need
-JDK 17+, Maven, Node.js 22.16+ and npm on the development host. `local.sh` needs
+JDK 25+, Maven, Node.js 22.16+ and npm on the development host. `local.sh` needs
 only Docker Compose v2 with `--wait-timeout` and standard host utilities.
 
-The matching XiPKI `6.6.0-SNAPSHOT` utility dependencies must already be installed in
-Maven. To install them as part of a build, export `XIPKI_SOURCE_DIR` pointing
-to the matching 6.x source checkout (not upstream 7.x). This is optional and
-never inferred from a backup/worktree location. For example:
+The XiPKI `7.0.0-SNAPSHOT` modules declared by `console-server/pom.xml` must be
+available in the local Maven repository. Set `XIPKI_SOURCE_DIR` to the matching
+XiPKI source checkout to let `build.sh` install the `util` module and its
+dependencies before building the Console. This is optional when those artifacts
+are already installed and is never inferred from a backup/worktree location.
+For example:
 
 ```sh
-export JAVA_HOME=/absolute/path/to/jdk-17
+export JAVA_HOME=/absolute/path/to/jdk-25
 export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
 sh scripts/build.sh --docker
-docker build -f "$XIPKI_SOURCE_DIR/docker/ca/Dockerfile" \
-  -t xipki-ca:security-update "$XIPKI_SOURCE_DIR"
-export CA_IMAGE=xipki-ca:security-update
+export CA_IMAGE=your-xipki-7-ca-image
 export WEB_IMAGE=xipki-console:local
 export DB_IMAGE=xipki-console-db:local
 sh scripts/check-security.sh
@@ -40,12 +40,12 @@ export WEB_PORT=28127
 sh scripts/local.sh up
 ```
 
-`CA_IMAGE` must be the matching XiPKI Docker distribution. Pin that source
-checkout to a tested commit; it must include `docker/ca/Dockerfile`, export its
-management client and expose a healthy management endpoint as described in the
-root README. Building Console does not build CA. `security-update` is only a
-local development tag; the security scan requires Trivy and release images
-should use reviewed, immutable digests.
+`CA_IMAGE` must be a separately maintained XiPKI Docker distribution that
+exports its management client and exposes a healthy management endpoint as
+described in the root README. The current upstream master does not include the
+historical `docker/ca/Dockerfile`, and building Console does not build a CA
+image. The security scan requires Trivy; release images should use reviewed,
+immutable digests.
 The example uses an unused local port; default `WEB_PORT` is 8080. Existing
 services using the chosen port are not stopped or replaced automatically.
 

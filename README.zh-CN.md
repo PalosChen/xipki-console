@@ -3,7 +3,7 @@
 [English](README.md) | **简体中文**
 
 XiPKI Console 是 [XiPKI](https://github.com/xipki/xipki) 的 Web 管理界面。
-React 前端支持英文和简体中文；Java 17 后端使用嵌入式 Tomcat 和 JDBC，
+React 前端支持英文和简体中文；Java 25 后端使用嵌入式 Tomcat 和 JDBC，
 通过双向 TLS 调用 CA 管理接口，并使用 XiPKI 工具模块处理配置和 JSON 编码。
 
 ## 功能
@@ -30,17 +30,18 @@ Web 账户、权限、会话和审计数据存储在 MariaDB 中。CA 数据库�
 
 ## 构建
 
-需要 JDK 17+、Maven、Node.js 22.16+ 和 npm。在仓库根目录执行：
+需要 JDK 25+、Maven、Node.js 22.16+ 和 npm。在仓库根目录执行：
 
 ```sh
 export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
 sh scripts/build.sh
 ```
 
-后端依赖 XiPKI `util-extra:6.6.0-SNAPSHOT`。设置 `XIPKI_SOURCE_DIR` 后，
-构建脚本会从该源码安装匹配的工具模块；如果本地 Maven 仓库已有构建产物，
-可不设置该变量。脚本按锁文件安装前端依赖，运行前后端测试并完成构建。
-执行 `sh scripts/package.sh` 可生成主机运行压缩包，产物位于 `dist/`。
+后端依赖 `console-server/pom.xml` 中声明的 XiPKI `7.0.0-SNAPSHOT` 模块。
+设置 `XIPKI_SOURCE_DIR` 后，构建脚本会从该源码安装匹配的 `util` 模块及其依赖；
+如果本地 Maven 仓库已有构建产物，可不设置该变量。脚本按锁文件安装前端依赖，
+运行前后端测试并完成构建。执行 `sh scripts/package.sh` 可生成主机运行压缩包，
+产物位于 `dist/`。
 
 XiPKI 源码版本须与 `console-server/pom.xml` 中的版本兼容。使用其他版本前
 需要验证兼容性。
@@ -59,24 +60,23 @@ java -Dsun.net.client.defaultConnectTimeout=3000 -Dsun.net.client.defaultReadTim
 ## Docker 部署
 
 `sh scripts/build.sh --docker` 构建 Console 和数据库镜像。Console 镜像
-在 Alpine 上打包已构建的应用和 Java 17；数据库镜像使用 Alpine 上的
+在 Alpine 上打包已构建的应用和 Java 25；数据库镜像使用 Alpine 上的
 MariaDB 11.4.13。镜像验证要求见[安全指南](guides/security.md)。
 
 `deploy/compose.yml` 启动 Console、MariaDB 和独立 CA 镜像，并使用命名卷持久化数据。
 需要**匹配的 XiPKI Docker 发行镜像**，该镜像必须将管理客户端导出到 `/export/web`，
 并在 `https://ca:8443/ca/mgmt` 提供管理接口。CA 镜像必须满足这一初始化约定。
 
-CA 镜像需要从匹配的 XiPKI `6.6.0-SNAPSHOT` 发行源码单独构建，该源码须包含
-`docker/ca/Dockerfile`。本仓库不发布 CA 镜像。Console 构建和 CA 镜像构建
-应使用同一份 XiPKI 源码，并固定其版本以便复现。在已启动 Docker 的
-开发主机上构建并扫描镜像，然后启动：
+CA 镜像由独立的 XiPKI 发行项目维护，本仓库不发布 CA 镜像。当前 XiPKI
+上游主分支已不再包含历史路径 `docker/ca/Dockerfile`，因此必须单独提供满足
+`/export/web` 和 `https://ca:8443/ca/mgmt` 约定的 CA 镜像。正式部署应固定经过审查的
+镜像 digest 以保证可复现。在已启动 Docker 的开发主机上构建并扫描 Console 和数据库镜像，
+然后启动：
 
 ```sh
 export XIPKI_SOURCE_DIR=/absolute/path/to/matching/xipki
 sh scripts/build.sh --docker
-docker build -f "$XIPKI_SOURCE_DIR/docker/ca/Dockerfile" \
-  -t xipki-ca:security-update "$XIPKI_SOURCE_DIR"
-export CA_IMAGE=xipki-ca:security-update
+export CA_IMAGE=your-xipki-7-ca-image
 export WEB_IMAGE=xipki-console:local
 export DB_IMAGE=xipki-console-db:local
 sh scripts/check-security.sh

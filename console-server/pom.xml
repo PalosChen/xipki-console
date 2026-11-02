@@ -5,13 +5,15 @@
   <name>XiPKI Console Server</name>
   <licenses><license><name>Apache License, Version 2.0</name><url>https://www.apache.org/licenses/LICENSE-2.0</url><distribution>repo</distribution></license></licenses>
   <properties>
-    <maven.compiler.release>17</maven.compiler.release><project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <xipki.version>6.6.0-SNAPSHOT</xipki.version><console.ui.dist>${project.basedir}/../console-ui/dist</console.ui.dist>
+    <maven.compiler.release>25</maven.compiler.release><project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <xipki.version>7.0.0-SNAPSHOT</xipki.version><console.ui.dist>${project.basedir}/../console-ui/dist</console.ui.dist>
   </properties>
   <dependencies>
-    <dependency><groupId>org.xipki</groupId><artifactId>util-extra</artifactId><version>${xipki.version}</version>
+    <dependency><groupId>org.xipki.pki</groupId><artifactId>util</artifactId><version>${xipki.version}</version>
       <exclusions><exclusion><groupId>com.zaxxer</groupId><artifactId>HikariCP</artifactId></exclusion></exclusions>
     </dependency>
+    <dependency><groupId>org.xipki.crypto</groupId><artifactId>codec</artifactId><version>${xipki.version}</version></dependency>
+    <dependency><groupId>org.xipki.pkix</groupId><artifactId>pkix-util</artifactId><version>${xipki.version}</version></dependency>
     <dependency><groupId>org.mindrot</groupId><artifactId>jbcrypt</artifactId><version>0.4</version></dependency>
     <dependency><groupId>org.apache.tomcat.embed</groupId><artifactId>tomcat-embed-core</artifactId><version>10.1.61</version>
       <exclusions><exclusion><groupId>org.apache.tomcat</groupId><artifactId>tomcat-annotations-api</artifactId></exclusion></exclusions>

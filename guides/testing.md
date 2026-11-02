@@ -10,7 +10,7 @@ The combined entry point is `sh scripts/build.sh` (or `--docker` to also build
 the runtime image). `sh scripts/package.sh` runs the same checks before creating
 the host archive. For individual checks, use the commands below.
 
-Use Node.js 22.16+ and JDK 17, with the matching XiPKI artifacts installed:
+Use Node.js 22.16+ and JDK 25, with the matching XiPKI artifacts installed:
 
 ```sh
 cd console-ui

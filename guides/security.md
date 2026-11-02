@@ -26,7 +26,7 @@ The release gate covers Console, the derived MariaDB image and the CA distributi
 image. A clean result cannot be claimed if any of those scans is unavailable.
 
 The Console runtime starts from the official multi-architecture Alpine 3.24 image
-and installs only the headless Java 17 runtime. Its health check uses Alpine's
+and installs only the headless Java 25 runtime. Its health check uses Alpine's
 BusyBox `wget`. The database runtime starts from the official Alpine 3.23 image
 with MariaDB 11.4.13 from Alpine's package repository. It copies the matching
 official MariaDB entrypoint and healthcheck scripts at build time.
