@@ -1180,7 +1180,11 @@ public final class CaDomain {
   }
 
   public record CertListInfo(
-      BigInteger serialNumber, String subject, Instant notBefore, Instant notAfter) {
+      BigInteger serialNumber,
+      String subject,
+      Instant notBefore,
+      Instant notAfter,
+      CertRevocationInfo revocationInfo) {
     public BigInteger getSerialNumber() {
       return serialNumber;
     }
@@ -1195,6 +1199,10 @@ public final class CaDomain {
 
     public Instant getNotAfter() {
       return notAfter;
+    }
+
+    public CertRevocationInfo getRevocationInfo() {
+      return revocationInfo;
     }
   }
 

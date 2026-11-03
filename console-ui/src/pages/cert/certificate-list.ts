@@ -8,6 +8,10 @@ import type { CertificateQuery } from '../../api/cert'
 
 export type CertificateSortField = 'notBefore' | 'notAfter' | 'subject'
 export type CertificateSortDirection = 'asc' | 'desc'
+export type CertificateSort = {
+  field: CertificateSortField
+  direction: CertificateSortDirection
+}
 
 export function certificateOrder(field: CertificateSortField, direction: CertificateSortDirection) {
   return `${field}${direction === 'desc' ? '-desc' : ''}`

@@ -26,7 +26,7 @@ public class CertDto {
   public String certPem;
   public String profile;
   // revocation
-  public boolean revoked;
+  public Boolean revoked;
   public String revocationTime;
   public String revocationReason;
   public String invalidityTime;
@@ -50,15 +50,7 @@ public class CertDto {
       throw new IllegalStateException("Unable to encode the certificate", e);
     }
 
-    CertRevocationInfo rev = info.getRevInfo();
-    if (rev != null) {
-      dto.revoked = true;
-      dto.revocationTime =
-          rev.getRevocationTime() != null ? rev.getRevocationTime().toString() : null;
-      dto.revocationReason = rev.getReason() != null ? rev.getReason().getDescription() : null;
-      dto.invalidityTime =
-          rev.getInvalidityTime() != null ? rev.getInvalidityTime().toString() : null;
-    }
+    dto.setRevocation(info.getRevInfo());
 
     return dto;
   }
@@ -69,7 +61,19 @@ public class CertDto {
     dto.subject = info.getSubject().toString();
     dto.notBefore = info.getNotBefore().toString();
     dto.notAfter = info.getNotAfter().toString();
+    dto.revoked = false;
+    dto.setRevocation(info.getRevocationInfo());
     return dto;
+  }
+
+  private void setRevocation(CertRevocationInfo rev) {
+    if (rev == null) {
+      return;
+    }
+    revoked = true;
+    revocationTime = rev.getRevocationTime() == null ? null : rev.getRevocationTime().toString();
+    revocationReason = rev.getReason() == null ? null : rev.getReason().getDescription();
+    invalidityTime = rev.getInvalidityTime() == null ? null : rev.getInvalidityTime().toString();
   }
 
   // Getters and setters
@@ -129,11 +133,11 @@ public class CertDto {
     this.profile = profile;
   }
 
-  public boolean isRevoked() {
+  public Boolean isRevoked() {
     return revoked;
   }
 
-  public void setRevoked(boolean revoked) {
+  public void setRevoked(Boolean revoked) {
     this.revoked = revoked;
   }
 

@@ -7,6 +7,7 @@ import test from 'node:test'
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import dayjs from 'dayjs'
+import { revocationDisplay } from '../src/pages/cert/certificate-revocation.ts'
 import { certificateOrder, certificatePage, certificateQueryTime, collectCertificatePages, localCertificateTime } from '../src/pages/cert/certificate-list.ts'
 
 const require = createRequire(import.meta.url)
@@ -127,6 +128,7 @@ test('a later certificate mutation refresh supersedes a list request still in fl
     if (id === '../../auth') return { useCan: () => () => true }
     if (id === './certificate-list') return { certificateOrder, certificatePage, certificateQueryTime, collectCertificatePages, localCertificateTime }
     if (id === './certificate-validity') return { certificateValidity: () => 'valid' }
+    if (id === './certificate-revocation') return { revocationDisplay }
     if (id === './CertDetailDrawer') return 'CertDetailDrawer'
     if (id === './CertList.css') return {}
     throw new Error(`Unexpected dependency: ${id}`)
@@ -151,6 +153,7 @@ test('a later certificate mutation refresh supersedes a list request still in fl
   render()
   await flush()
   assert.equal(requests.length, 1)
+  assert.equal(requests[0].params.orderBy, 'notBefore-desc')
   requests[0].resolve(response([row('original')]))
   await flush()
   nodes(tree).find(node => node.type === 'Input' && node.props?.['aria-label'] === 'Subject DN filter')
@@ -173,4 +176,56 @@ test('a later certificate mutation refresh supersedes a list request still in fl
   requests[1].resolve(response([row('stale')]))
   await flush()
   assert.equal(nodes(tree).find(node => node.type === 'Table').props.dataSource[0].subject, 'latest')
+
+  const table = () => nodes(tree).find(node => node.type === 'Table').props
+  assert.deepEqual(table().columns.slice(0, 3).map(column => column.key || column.dataIndex),
+    ['rowNumber', 'serialNumber', 'subject'])
+  assert.deepEqual(table().columns.filter(column => column.sorter).map(column => column.dataIndex),
+    ['subject', 'notBefore', 'notAfter'])
+  const rowNumber = index => table().columns[0].render(undefined, table().dataSource[index], index)
+  assert.equal(rowNumber(0), 1)
+  assert.equal(table().columns.find(column => column.dataIndex === 'notBefore').sortOrder,
+    'descend')
+  assert.deepEqual(table().sortDirections, ['descend', 'ascend', 'descend'])
+  const sort = (field, order) => table().onChange({}, {}, { field, order }, { action: 'sort' })
+  sort('notBefore', 'ascend')
+  await flush()
+  assert.equal(requests[3].params.orderBy, 'notBefore')
+  assert.equal(requests[3].params.subject, undefined, 'sorting must retain applied filters')
+  sort('notAfter', 'descend')
+  await flush()
+  assert.equal(requests[4].params.orderBy, 'notAfter-desc')
+  assert.equal(table().columns.find(column => column.dataIndex === 'notBefore').sortOrder, null)
+  assert.equal(table().columns.find(column => column.dataIndex === 'notAfter').sortOrder,
+    'descend')
+  const rows = Array.from({ length: 25 }, (_, index) => ({
+    ...row('sorted-' + index), serialNumber: String(index + 1),
+  }))
+  requests[4].resolve(response(rows))
+  await flush()
+  requests[3].resolve(response([row('outdated sort')]))
+  await flush()
+  assert.equal(table().dataSource[0].subject, 'sorted-0')
+  nodes(tree).find(node => node.type === 'Pagination').props.onChange(2, 20)
+  await flush()
+  assert.equal(table().dataSource[0].subject, 'sorted-20')
+  assert.equal(rowNumber(0), 21)
+  assert.equal(rowNumber(4), 25)
+  sort('notAfter', 'ascend')
+  await flush()
+  assert.equal(requests[5].params.orderBy, 'notAfter')
+  requests[5].resolve(response(rows))
+  await flush()
+  assert.equal(nodes(tree).find(node => node.type === 'Pagination').props.current, 1)
+  assert.equal(rowNumber(0), 1)
+  sort('notAfter', 'descend')
+  await flush()
+  assert.equal(requests[6].params.orderBy, 'notAfter-desc')
+  nodes(tree).find(node => node.type === 'CertDetailDrawer').props.onChanged()
+  await flush()
+  assert.equal(requests[7].params.orderBy, 'notAfter-desc', 'refresh keeps the latest sort')
+  requests[7].resolve(response(rows))
+  requests[6].resolve(response([row('old sort')]))
+  await flush()
+  assert.equal(table().dataSource[0].subject, 'sorted-0')
 })

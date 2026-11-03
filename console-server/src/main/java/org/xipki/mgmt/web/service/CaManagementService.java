@@ -31,7 +31,6 @@ public class CaManagementService {
   public boolean isReady() {
     try {
       return caMgmtClient.getCaSystemStatus() == CaSystemStatus.STARTED_AS_MASTER
-          && caMgmtClient.getDbSchemas() != null
           && caMgmtClient.getCaNames() != null;
     } catch (CaMgmtException ex) {
       return false;

@@ -20,6 +20,9 @@ import org.xipki.mgmt.web.ca.Crypto.*;
  * @author palos
  */
 public class CaMgmtClient implements CaManager {
+  // XiPKI 7 parses the optional subject unconditionally; an empty DN matches every subject.
+  private static final byte[] EMPTY_SUBJECT_DN = new X500Principal("").getEncoded();
+
   private final ManagementProtocol protocol;
 
   public CaMgmtClient(ManagementProtocol protocol) {
@@ -529,7 +532,7 @@ public class CaMgmtClient implements CaManager {
             "caName",
             caName,
             "encodedSubjectDnPattern",
-            subjectPattern == null ? null : subjectPattern.getEncoded(),
+            subjectPattern == null ? EMPTY_SUBJECT_DN : subjectPattern.getEncoded(),
             "validFrom",
             validFrom,
             "validTo",
@@ -560,7 +563,7 @@ public class CaMgmtClient implements CaManager {
   public String getTokenInfoP11(String moduleName, Integer slotIndex, boolean verbose)
       throws CaMgmtException {
     return call(
-        "getTokenInfoP11",
+        "tokenInfoP11",
         String.class,
         "moduleName",
         moduleName,

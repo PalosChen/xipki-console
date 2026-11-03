@@ -26,6 +26,28 @@ import org.xipki.mgmt.web.service.CaManagementService;
  */
 class CaAvailabilityTest {
   @Test
+  void readinessDoesNotDependOnDbSchemaManagement() throws Exception {
+    var client =
+        new Client() {
+          @Override
+          public CaSystemStatus getCaSystemStatus() {
+            return CaSystemStatus.STARTED_AS_MASTER;
+          }
+
+          @Override
+          public Set<String> getCaNames() {
+            return Set.of();
+          }
+
+          @Override
+          public Map<String, String> getDbSchemas() {
+            throw new AssertionError("Readiness must not request DB schemas");
+          }
+        };
+    assertTrue(new CaManagementService(client).isReady());
+  }
+
+  @Test
   void inactiveCaIsRejectedBeforeRemoteCertificateQuery() throws Exception {
     var client = new Client();
     var service = new CaManagementService(client);

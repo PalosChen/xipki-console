@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.xipki.codec.json.*;
 import org.xipki.mgmt.web.ca.CaDomain.*;
 import org.xipki.mgmt.web.ca.ManagementProtocol.Transport;
+import org.xipki.mgmt.web.dto.CertDto;
 import org.xipki.mgmt.web.service.CaConfigurationMapper;
 
 /**
@@ -74,6 +75,43 @@ class ManagementProtocolTest {
   }
 
   @Test
+  void unfilteredCertificateListSendsAnEmptySubjectDn() throws Exception {
+    var wire = new Exchange();
+    wire.response = "{\"result\":[]}";
+    wire.client().listCertificates("ca", null, null, null, CertListOrderBy.NOT_BEFORE_DESC, 50);
+    assertArrayEquals(
+        new X500Principal("").getEncoded(), wire.request.getBytes("encodedSubjectDnPattern"));
+  }
+
+  @Test
+  void tokenInfoUsesTheXiPkiManagementActionName() throws Exception {
+    var wire = new Exchange();
+    wire.response = "{\"result\":\"token-info\"}";
+    var result = wire.client().getTokenInfoP11("module", 3, true);
+    assertEquals("token-info", result);
+    assertEquals("tokenInfoP11", wire.action);
+    assertEquals("module", wire.request.getString("moduleName"));
+    assertEquals(3, wire.request.getInt("slotIndex"));
+    assertTrue(wire.request.getBool("verbose"));
+  }
+
+  @Test
+  void certificateListKeepsRevocationInformation() throws Exception {
+    var wire = new Exchange();
+    wire.response =
+        "{\"result\":[{\"serialNumber\":\"01\",\"subject\":\"CN=Fixture\","
+            + "\"notBefore\":\"2026-10-29T00:00:00Z\","
+            + "\"notAfter\":\"2027-10-29T00:00:00Z\","
+            + "\"revocationInfo\":{\"reason\":\"certificateHold\","
+            + "\"revocationTime\":\"2026-11-01T00:00:00Z\"}}]}";
+    var info = wire.client().listCertificates("ca", null, null, null,
+        CertListOrderBy.NOT_BEFORE_DESC, 50).get(0);
+    var dto = CertDto.fromCertListInfo(info);
+    assertEquals(Boolean.TRUE, dto.isRevoked());
+    assertEquals("certificateHold", dto.getRevocationReason());
+  }
+
+  @Test
   void caCreationIsFlattenedAndChangeKeepsExplicitWrapper() throws Exception {
     var wire = new Exchange();
     var client = wire.client();
@@ -125,6 +163,8 @@ class ManagementProtocolTest {
     assertTrue(result.isRevoked());
     assertEquals(CrlReason.KEY_COMPROMISE, result.getRevInfo().getReason());
     assertEquals("tls", result.getCertprofile());
+    wire.response = "{\"cert\":\"" + encoded + "\",\"certprofile\":null,\"revInfo\":null}";
+    assertNull(CertDto.fromCertWithRevocation(client.getCert("ca", BigInteger.ONE)).isRevoked());
     wire.response = "{\"result\":\"" + encoded + "\"}";
     assertEquals(cert, client.generateCertificate("ca", "tls", new byte[] {1, 2}, null, null));
     assertArrayEquals(new byte[] {1, 2}, wire.request.getBytes("encodedCsr"));

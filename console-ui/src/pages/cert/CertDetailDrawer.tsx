@@ -27,8 +27,13 @@ import { certApi } from '../../api/cert'
 import { useCan } from '../../auth'
 import { useReauthentication } from '../../components/Reauthentication'
 import { certificateValidity } from './certificate-validity'
+import {
+  revocationDisplay,
+  withKnownRevocation,
+  type CertificateRevocation,
+} from './certificate-revocation'
 
-type CertificateDetail = {
+type CertificateDetail = CertificateRevocation & {
   ca: string
   serialNumber: string
   subject: string
@@ -36,14 +41,13 @@ type CertificateDetail = {
   notBefore: string
   notAfter: string
   profile?: string
-  revoked?: boolean
-  revocationReason?: string
-  revocationTime?: string
-  invalidityTime?: string
   certPem?: string
 }
-type Target = { ca: string; serial: string }
-type Props = { target: Target; onClose: () => void; onChanged: () => void }
+export type CertificateTarget = CertificateRevocation & {
+  ca: string
+  serial: string
+}
+type Props = { target: CertificateTarget; onClose: () => void; onChanged: () => void }
 
 const reasons = [
   'unspecified',
@@ -78,8 +82,10 @@ const CertDetailDrawer: React.FC<Props> = ({ target, onClose, onChanged }) => {
     void certApi
       .get(target.ca, target.serial)
       .then((res) => {
-        if (alive.current && request === generation.current)
-          setDetail({ ...res.data.data, ca: target.ca })
+        if (alive.current && request === generation.current) {
+          const remote = res.data.data as CertificateDetail
+          setDetail({ ...withKnownRevocation(remote, target), ca: target.ca })
+        }
       })
       .catch(() => {
         /* The common client reports the error. */
@@ -128,8 +134,7 @@ const CertDetailDrawer: React.FC<Props> = ({ target, onClose, onChanged }) => {
         action === 'delete' ? t('Certificate deleted') : t('Certificate state refreshed'),
       )
       onChanged()
-      if (action === 'delete') onClose()
-      else load()
+      onClose()
     } catch {
       /* Do not automatically retry certificate mutations. */
     } finally {
@@ -137,7 +142,8 @@ const CertDetailDrawer: React.FC<Props> = ({ target, onClose, onChanged }) => {
     }
   }
 
-  const held = detail?.revoked && detail.revocationReason === 'certificateHold'
+  const revocation = detail && revocationDisplay(detail)
+  const held = revocation?.kind === 'hold'
   const validity = detail && certificateValidity(detail)
   const validityLabel =
     validity === 'expiring-soon'
@@ -192,9 +198,7 @@ const CertDetailDrawer: React.FC<Props> = ({ target, onClose, onChanged }) => {
               >
                 {t(validityLabel)}
               </Tag>
-              <Tag color={held ? 'orange' : detail.revoked ? 'red' : 'green'}>
-                {held ? t('ON HOLD') : detail.revoked ? t('REVOKED') : t('NOT REVOKED')}
-              </Tag>
+              <Tag color={revocation?.color}>{t(revocation?.label || '')}</Tag>
             </Space>
             <Descriptions className="cert-detail-descriptions" bordered size="small" column={1}>
               <Descriptions.Item label={t('Issuing CA')}>{detail.ca}</Descriptions.Item>
@@ -244,7 +248,7 @@ const CertDetailDrawer: React.FC<Props> = ({ target, onClose, onChanged }) => {
                 {t('Download DER')}
               </Button>
               {(can('CERT_REVOKE', target.ca) || can('CERT_SUSPEND', target.ca)) &&
-                (!detail.revoked || held) && (
+                (detail.revoked === false || held) && (
                   <Button
                     danger
                     disabled={working}

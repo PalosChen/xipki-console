@@ -457,7 +457,8 @@ public final class ManagementProtocol {
                       m.getNnBigInteger("serialNumber"),
                       m.getNnString("subject"),
                       m.getNnInstant("notBefore"),
-                      m.getNnInstant("notAfter"));
+                      m.getNnInstant("notAfter"),
+                      revocation(m.getMap("revocationInfo")));
               case "CaHasRequestorEntry" ->
                   new CaHasRequestorEntry(
                       ident(m.getNnMap("requestorIdent")),
